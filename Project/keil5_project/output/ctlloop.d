@@ -1,4 +1,4 @@
-./output/gd32e10x_it.o: ..\gd32e10x_it.c ..\user\SYS\sys_bsp.h \
+./output/ctlloop.o: ..\user\SYS\CtlLoop.c ..\user\SYS\sys_bsp.h \
   ..\..\Firmware\CMSIS\GD\GD32E10x\Include\gd32e10x.h \
   ..\..\Firmware\CMSIS\core_cm4.h ..\..\Firmware\CMSIS\core_cmInstr.h \
   ..\..\Firmware\CMSIS\core_cmFunc.h \
@@ -39,6 +39,4 @@
   ..\..\Firmware\GD32E10x_usbfs_library\ustd\common\usb_ch9_std.h \
   ..\..\Firmware\GD32E10x_usbfs_library\driver\Include\drv_usb_dev.h \
   ..\usbd_conf.h \
-  ..\..\Firmware\GD32E10x_usbfs_library\ustd\class\cdc\usb_cdc.h \
-  ..\gd32e10x_it.h ..\main.h \
-  ..\..\Firmware\GD32E10x_usbfs_library\driver\Include\drv_usbd_int.h
+  ..\..\Firmware\GD32E10x_usbfs_library\ustd\class\cdc\usb_cdc.h

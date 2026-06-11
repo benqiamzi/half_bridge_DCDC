@@ -27,7 +27,9 @@
   ..\..\Firmware\GD32E10x_standard_peripheral\Include\gd32e10x_misc.h \
   ..\..\Firmware\GD32E10x_standard_peripheral\Include\gd32e10x_exmc.h \
   ..\systick.h ..\main.h ..\..\Utilities\gd32e10x_eval.h \
-  ..\user\OLED\jkd_oled.h ..\user\OLED\oledfont.h \
+  ..\user\OLED\jkd_oled.h ..\user\OLED\oledfont.h ..\user\SYS\sys_bsp.h \
+  ..\user\SYS\function.h ..\user\SYS\adc_dc_sample.h ..\user\SYS\mypid.h \
+  ..\user\SYS\ctlloop.h \
   ..\..\Firmware\GD32E10x_usbfs_library\driver\Include\drv_usb_hw.h \
   ..\usb_conf.h \
   ..\..\Firmware\GD32E10x_usbfs_library\device\class\cdc\Include\cdc_acm_core.h \

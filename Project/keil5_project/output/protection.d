@@ -1,4 +1,5 @@
-./output/gd32e10x_it.o: ..\gd32e10x_it.c ..\user\SYS\sys_bsp.h \
+./output/protection.o: ..\user\SYS\protection.c ..\user\SYS\protection.h \
+  ..\user\SYS\function.h ..\user\SYS\sys_bsp.h \
   ..\..\Firmware\CMSIS\GD\GD32E10x\Include\gd32e10x.h \
   ..\..\Firmware\CMSIS\core_cm4.h ..\..\Firmware\CMSIS\core_cmInstr.h \
   ..\..\Firmware\CMSIS\core_cmFunc.h \
@@ -26,7 +27,7 @@
   ..\..\Firmware\GD32E10x_standard_peripheral\Include\gd32e10x_wwdgt.h \
   ..\..\Firmware\GD32E10x_standard_peripheral\Include\gd32e10x_misc.h \
   ..\..\Firmware\GD32E10x_standard_peripheral\Include\gd32e10x_exmc.h \
-  ..\systick.h ..\..\Utilities\gd32e10x_eval.h ..\user\SYS\function.h \
+  ..\systick.h ..\..\Utilities\gd32e10x_eval.h \
   ..\user\SYS\adc_dc_sample.h ..\user\SYS\mypid.h ..\user\SYS\ctlloop.h \
   ..\user\OLED\jkd_oled.h ..\user\OLED\oledfont.h \
   ..\..\Firmware\GD32E10x_usbfs_library\driver\Include\drv_usb_hw.h \
@@ -39,6 +40,4 @@
   ..\..\Firmware\GD32E10x_usbfs_library\ustd\common\usb_ch9_std.h \
   ..\..\Firmware\GD32E10x_usbfs_library\driver\Include\drv_usb_dev.h \
   ..\usbd_conf.h \
-  ..\..\Firmware\GD32E10x_usbfs_library\ustd\class\cdc\usb_cdc.h \
-  ..\gd32e10x_it.h ..\main.h \
-  ..\..\Firmware\GD32E10x_usbfs_library\driver\Include\drv_usbd_int.h
+  ..\..\Firmware\GD32E10x_usbfs_library\ustd\class\cdc\usb_cdc.h

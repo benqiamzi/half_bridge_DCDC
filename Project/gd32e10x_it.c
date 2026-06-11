@@ -31,11 +31,14 @@ WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWIS
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY 
 OF SUCH DAMAGE.
 */
-
+#include "sys_bsp.h"
 #include "gd32e10x_it.h"
 #include "main.h"
 #include "systick.h"
 #include "drv_usbd_int.h"
+
+
+uint32_t uwTick = 0;
 
 extern usb_core_driver cdc_acm;
 extern uint32_t usbfs_prescaler;
@@ -144,8 +147,12 @@ void PendSV_Handler(void)
 */
 void SysTick_Handler(void)
 {
+	uwTick +=1U;
     delay_decrement();
 }
+
+
+
 
 /*!
     \brief      this function handles timer2 interrupt request

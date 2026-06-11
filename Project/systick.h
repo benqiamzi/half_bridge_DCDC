@@ -37,6 +37,8 @@ OF SUCH DAMAGE.
 
 #include <stdint.h>
 
+extern uint32_t uwTick;
+
 /* configure systick */
 void systick_config(void);
 /* delay a time in milliseconds */

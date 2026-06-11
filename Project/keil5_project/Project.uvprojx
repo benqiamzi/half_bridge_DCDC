@@ -338,9 +338,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>USE_STDPERIPH_DRIVER,GD32E10X,GD32E103V_EVAL</Define>
+              <Define>USE_STDPERIPH_DRIVER,GD32E10X,GD32E103V_EVAL, __FPU_USED=1, __FPU_PRESENT=1</Define>
               <Undefine></Undefine>
-              <IncludePath>..\;..\..\Firmware\CMSIS;..\..\Firmware\CMSIS\GD\GD32E10x\Include;..\..\Firmware\GD32E10x_standard_peripheral\Include;..\..\Utilities;..\user\OLED;..\..\Firmware\GD32E10x_usbfs_library\driver\Include;..\..\Firmware\GD32E10x_usbfs_library\device\core\Include;..\..\Firmware\GD32E10x_usbfs_library\device\class\cdc\Include;..\..\Firmware\GD32E10x_usbfs_library\ustd\class\cdc;..\..\Firmware\GD32E10x_usbfs_library\ustd\common</IncludePath>
+              <IncludePath>..\;..\..\Firmware\CMSIS;..\..\Firmware\CMSIS\GD\GD32E10x\Include;..\..\Firmware\GD32E10x_standard_peripheral\Include;..\..\Utilities;..\user\OLED;..\..\Firmware\GD32E10x_usbfs_library\driver\Include;..\..\Firmware\GD32E10x_usbfs_library\device\core\Include;..\..\Firmware\GD32E10x_usbfs_library\device\class\cdc\Include;..\..\Firmware\GD32E10x_usbfs_library\ustd\class\cdc;..\..\Firmware\GD32E10x_usbfs_library\ustd\common;..\user\SYS</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -568,6 +568,36 @@
               <FileName>oledfont.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\user\OLED\oledfont.c</FilePath>
+            </File>
+            <File>
+              <FileName>adc_dc_sample.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user\SYS\adc_dc_sample.c</FilePath>
+            </File>
+            <File>
+              <FileName>CtlLoop.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user\SYS\CtlLoop.c</FilePath>
+            </File>
+            <File>
+              <FileName>function.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user\SYS\function.c</FilePath>
+            </File>
+            <File>
+              <FileName>protection.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user\SYS\protection.c</FilePath>
+            </File>
+            <File>
+              <FileName>sys_bsp.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\user\SYS\sys_bsp.h</FilePath>
+            </File>
+            <File>
+              <FileName>mypid.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user\SYS\mypid.c</FilePath>
             </File>
           </Files>
         </Group>

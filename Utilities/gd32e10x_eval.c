@@ -2,23 +2,22 @@
 #include "gd32e10x_eval.h"
 #include "systick.h"
 
-uint16_t adc_value[5];
+volatile uint16_t adc_value[5];
 
-/* È«¾Ö±äÁ¿£¨½öÕ¼¿Õ±È£¬¹©ºóĞøÓ¦ÓÃ²ãĞŞ¸Ä£©*/
-uint16_t pwm_duty_cycle = 1200;   // 0 ~ 2399
 
-/* º¯ÊıÉùÃ÷ */
+/* å‡½æ•°å£°æ˜ */
 void gpio_config(void);
+void timer5_config(void);
 void timer0_pwm_config(void);
 void adc0_config(void);
 void peripheral_config(void);
 
 /*!
-    \brief      GPIO ÅäÖÃ
-    - PA8 ¸´ÓÃÎª TIMER0_CH0
-    - PB13 ¸´ÓÃÎª TIMER0_CH0N
-    - PA0, PA1 ÎªÄ£ÄâÊäÈë£¨ADC£©
-    - PC6, PC7, PC8 ÎªÍÆÍìÊä³ö£¨LED£©
+    \brief      GPIO é…ç½®
+    - PA8 å¤ç”¨ä¸º TIMER0_CH0
+    - PB13 å¤ç”¨ä¸º TIMER0_CH0N
+    - PA0, PA1 ä¸ºæ¨¡æ‹Ÿè¾“å…¥ï¼ˆADCï¼‰
+    - PC6, PC7, PC8 ä¸ºæ¨æŒ½è¾“å‡ºï¼ˆLEDï¼‰
 */
 void gpio_config(void)
 {
@@ -27,29 +26,121 @@ void gpio_config(void)
     rcu_periph_clock_enable(RCU_GPIOC);
 	rcu_periph_clock_enable(RCU_ADC0);
 	rcu_adc_clock_config(RCU_CKADC_CKAPB2_DIV4);
-	
 
+    /* æµ‹è¯•åŠŸèƒ½å¼•è„š */
+    gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_10);
+    gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_11);
+    gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_10);
+	
+	/* æŒ‰é”®å¼•è„š */
+    gpio_init(KEY1_PORT, GPIO_MODE_IPU, GPIO_OSPEED_50MHZ, KEY1_PIN);
+    gpio_init(KEY2_PORT, GPIO_MODE_IPU, GPIO_OSPEED_50MHZ, KEY2_PIN);
+    gpio_init(KEY3_PORT, GPIO_MODE_IPU, GPIO_OSPEED_50MHZ, KEY3_PIN);
+    gpio_init(KEY4_PORT, GPIO_MODE_IPU, GPIO_OSPEED_50MHZ, KEY4_PIN);
     
-    /* »¥²¹ PWM Òı½Å */
+    /* äº’è¡¥ PWM å¼•è„š */
     gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, BUCK_PWM_HIGH_PIN);
     gpio_init(GPIOB, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, BUCK_PWM_LOW_PIN);
-    /* ADC ²ÉÑùÒı½Å */
+    /* ADC é‡‡æ ·å¼•è„š */
 	gpio_init(GPIOA, GPIO_MODE_AIN, GPIO_OSPEED_MAX, \
 				VOLT_VY_PIN|VOLT_IY_PIN|VOLT_IL_PIN|VOLT_VX_PIN|VOLT_IX_PIN);
    
-    /* LED Òı½Å */
+    /* LED å¼•è„š */
     gpio_init(LED_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, LED1_PIN | LED2_PIN | LED3_PIN);
-    gpio_bit_set(LED_PORT, LED1_PIN | LED2_PIN | LED3_PIN);   // ³õÊ¼Ï¨Ãğ
+    gpio_bit_set(LED_PORT, LED1_PIN | LED2_PIN | LED3_PIN);   // åˆå§‹ç†„ç­
 	
-	/* USB Òı½Å */
+	/* USB å¼•è„š */
 	gpio_init(GPIOA,GPIO_MODE_AF_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_11|GPIO_PIN_12);
 	
 }
 
 /*!
-    \brief      TIMER0 »¥²¹ PWM ÅäÖÃ£¨ÎŞÉ²³µ¹¦ÄÜ£©
-    - PWM ÆµÂÊ£ºÔ¼ 40kHz£¨period = 2399, prescaler = 1, CK_TIMER = 60MHz£©
-    - ËÀÇøÊ±¼ä£ºÔ¼ 100ns
+    \brief      TIMER0 äº’è¡¥ PWM é…ç½®ï¼ˆæ— åˆ¹è½¦åŠŸèƒ½ï¼‰
+    - PWM é¢‘ç‡ï¼šçº¦ 40kHzï¼ˆperiod = 2399, prescaler = 1, CK_TIMER = 60MHzï¼‰
+    - æ­»åŒºæ—¶é—´ï¼šçº¦ 100ns
+*/
+void timer5_config(void)
+{
+    timer_oc_parameter_struct timer_ocintpara;
+    timer_parameter_struct timer_initpara;
+	timer_break_parameter_struct timer_breakpara;
+    
+    rcu_periph_clock_enable(RCU_TIMER5);
+    rcu_periph_reset_enable(RCU_TIMER5RST);
+    rcu_periph_reset_disable(RCU_TIMER5RST);
+
+    /* 1ms å®šæ—¶å™¨ï¼Œå®šæ—¶å™¨æ—¶é’Ÿ 60MHzï¼Œé¢„åˆ†é¢‘ 60ï¼Œè®¡æ•°é¢‘ç‡ 1MHzï¼ŒARR = 999 */
+    timer_deinit(TIMER5);
+    timer_struct_para_init(&timer_initpara);
+    timer_initpara.prescaler         = 59;
+    timer_initpara.alignedmode       = TIMER_COUNTER_EDGE;
+    timer_initpara.counterdirection  = TIMER_COUNTER_UP;
+    timer_initpara.period            = 3999;
+    timer_initpara.clockdivision     = TIMER_CKDIV_DIV1;
+    timer_initpara.repetitioncounter = 0;
+    timer_init(TIMER5, &timer_initpara);
+
+    /* ä½¿èƒ½æ›´æ–°ä¸­æ–­ */
+    timer_interrupt_flag_clear(TIMER5, TIMER_INT_UP);
+    timer_interrupt_enable(TIMER5, TIMER_INT_UP);
+
+	/* TIM æ›´æ–°äº‹ä»¶ä½œä¸º TRGO */
+	timer_master_output_trigger_source_select(TIMER5, TIMER_TRI_OUT_SRC_UPDATE);
+    
+    /* ä½¿èƒ½ä¸»è¾“å‡ºã€è‡ªåŠ¨é‡è½½å½±å­å¯„å­˜å™¨ï¼Œå¯åŠ¨å®šæ—¶å™¨ */
+    timer_primary_output_config(TIMER5, ENABLE);
+    timer_auto_reload_shadow_enable(TIMER5);
+    timer_enable(TIMER5);
+}
+
+void encoder_config(void)
+{
+    timer_parameter_struct timer_initpara;
+    timer_ic_parameter_struct icpara;
+
+    /* 1) ä½¿èƒ½ GPIOB å’Œå®šæ—¶å™¨æ—¶é’Ÿ */
+    rcu_periph_clock_enable(RCU_GPIOB);
+    rcu_periph_clock_enable(RCU_TIMER1);
+    rcu_periph_clock_enable(RCU_AF);
+
+    /* 2) PB14/PB15 ä½œä¸ºè¾“å…¥å¼•è„šï¼Œå»ºè®®ä¸Šæ‹‰ */
+    gpio_init(GPIOB, GPIO_MODE_IPU, GPIO_OSPEED_50MHZ, GPIO_PIN_14 | GPIO_PIN_15);
+
+    /* 3) å®šæ—¶å™¨åŸºç¡€é…ç½® */
+    timer_deinit(TIMER1);
+    timer_struct_para_init(&timer_initpara);
+    timer_initpara.prescaler         = 0;
+    timer_initpara.alignedmode       = TIMER_COUNTER_EDGE;
+    timer_initpara.counterdirection  = TIMER_COUNTER_UP;
+    timer_initpara.period            = 25;
+    timer_initpara.clockdivision     = TIMER_CKDIV_DIV1;
+    timer_initpara.repetitioncounter = 3;
+    timer_init(TIMER1, &timer_initpara);
+
+    /* 4) é…ç½®é€šé“ 2/3 ä¸ºè¾“å…¥æ•è·ï¼Œç›´æ¥ TI æ¨¡å¼ */
+    timer_input_capture_parameter_struct_init(&icpara);
+    icpara.icpolarity  = TIMER_IC_POLARITY_RISING;
+    icpara.icselection = TIMER_IC_SELECTION_DIRECTTI;
+    icpara.icprescaler = TIMER_IC_PSC_DIV1;
+    icpara.icfilter    = 0;
+    timer_input_capture_config(TIMER1, TIMER_CH_2, &icpara);
+    timer_input_capture_config(TIMER1, TIMER_CH_3, &icpara);
+
+    /* 5) å¯ç”¨ç¼–ç å™¨æ¨¡å¼ */
+    timer_quadrature_decoder_mode_config(TIMER1,
+        TIMER_QUAD_DECODER_MODE0,
+        TIMER_IC_POLARITY_RISING,
+        TIMER_IC_POLARITY_RISING);
+
+    timer_enable(TIMER1);
+}
+
+
+
+/*!
+    \brief      TIMER0 äº’è¡¥ PWM é…ç½®ï¼ˆæ— åˆ¹è½¦åŠŸèƒ½ï¼‰
+    - PWM é¢‘ç‡ï¼šçº¦ 40kHzï¼ˆperiod = 2399, prescaler = 1, CK_TIMER = 60MHzï¼‰
+    - æ­»åŒºæ—¶é—´ï¼šçº¦ 100ns
 */
 void timer0_pwm_config(void)
 {
@@ -72,7 +163,7 @@ void timer0_pwm_config(void)
     timer_initpara.repetitioncounter = 0;
     timer_init(TIMER0, &timer_initpara);
     
-    /* Í¨µÀ0 ÅäÖÃ£¨º¬»¥²¹Êä³ö£©*/
+    /* é€šé“0 é…ç½®ï¼ˆå«äº’è¡¥è¾“å‡ºï¼‰*/
     timer_channel_output_struct_para_init(&timer_ocintpara);
     timer_ocintpara.outputstate  = TIMER_CCX_ENABLE;
     timer_ocintpara.outputnstate = TIMER_CCXN_ENABLE;
@@ -82,27 +173,27 @@ void timer0_pwm_config(void)
     timer_ocintpara.ocnidlestate = TIMER_OCN_IDLE_STATE_LOW;
     timer_channel_output_config(TIMER0, TIMER_CH_0, &timer_ocintpara);
     
-    /* PWM Ä£Ê½0£¬Õ¼¿Õ±È³õÊ¼Öµ */
-    timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_0, pwm_duty_cycle);
+    /* PWM æ¨¡å¼0ï¼Œå ç©ºæ¯”åˆå§‹å€¼ */
+    timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_0, 10);
     timer_channel_output_mode_config(TIMER0, TIMER_CH_0, TIMER_OC_MODE_PWM0);
-    timer_channel_output_shadow_config(TIMER0, TIMER_CH_0, TIMER_OC_SHADOW_DISABLE);
+    timer_channel_output_shadow_config(TIMER0, TIMER_CH_0, TIMER_OC_SHADOW_ENABLE);
     
-    /* ËÀÇøÊ±¼äÅäÖÃ£¨100ns @ 120MHz£©*/
+    /* æ­»åŒºæ—¶é—´é…ç½®ï¼ˆ100ns @ 120MHzï¼‰*/
     timer_break_struct_para_init(&timer_breakpara);
     /* automatic output enable, break, dead time and lock configuration*/
     timer_breakpara.runoffstate      = TIMER_ROS_STATE_DISABLE;
     timer_breakpara.ideloffstate     = TIMER_IOS_STATE_DISABLE ;
-    timer_breakpara.deadtime         = 50;
+    timer_breakpara.deadtime         = 60;
     timer_breakpara.breakpolarity    = TIMER_BREAK_POLARITY_LOW;
     timer_breakpara.outputautostate  = TIMER_OUTAUTO_ENABLE;
     timer_breakpara.protectmode      = TIMER_CCHP_PROT_0;
     timer_breakpara.breakstate       = TIMER_BREAK_DISABLE;
     timer_break_config(TIMER0, &timer_breakpara);
 	
-	/*TIM¸üĞÂÊÂ¼ş×÷ÎªTRGO£¬ËÍ¸øADCÍâ²¿´¥·¢*/
+	/*TIMæ›´æ–°äº‹ä»¶ä½œä¸ºTRGOï¼Œé€ç»™ADCå¤–éƒ¨è§¦å‘*/
 	timer_master_output_trigger_source_select(TIMER0,TIMER_TRI_OUT_SRC_O0CPRE);
     
-    /* Ê¹ÄÜÖ÷Êä³ö¡¢×Ô¶¯ÖØÔØÓ°×Ó¼Ä´æÆ÷£¬Æô¶¯¶¨Ê±Æ÷ */
+    /* ä½¿èƒ½ä¸»è¾“å‡ºã€è‡ªåŠ¨é‡è½½å½±å­å¯„å­˜å™¨ï¼Œå¯åŠ¨å®šæ—¶å™¨ */
     timer_primary_output_config(TIMER0, ENABLE);
     timer_auto_reload_shadow_enable(TIMER0);
     timer_enable(TIMER0);
@@ -133,16 +224,15 @@ void dma_config(void)
 
     dma_circulation_enable(DMA0, DMA_CH0);
 	
-	dma_interrupt_enable(DMA0,DMA_CH0,DMA_INT_FTF);//È«²¿°áÔËÍê³Éºó´¥·¢ÖĞ¶Ï
+	dma_interrupt_enable(DMA0,DMA_CH0,DMA_INT_FTF);//å…¨éƒ¨æ¬è¿å®Œæˆåè§¦å‘ä¸­æ–­
   
     /* enable DMA channel */
     dma_channel_enable(DMA0, DMA_CH0);
 	
-	adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
 }
 
 /*!
-    \brief      ADC0 ÅäÖÃ£¨É¨ÃèÁ½Í¨µÀ£ºµçÑ¹/µçÁ÷£©
+    \brief      ADC0 é…ç½®ï¼ˆæ‰«æä¸¤é€šé“ï¼šç”µå‹/ç”µæµï¼‰
 */
 void adc0_config(void)
 {
@@ -160,7 +250,7 @@ void adc0_config(void)
     /* ADC channel length config */
     adc_channel_length_config(ADC0, ADC_REGULAR_CHANNEL, 5);
     /* ADC regular channel config */
-	//²ÉÑùË³Ğò£ºIL¡¢IY¡¢IX¡¢VY¡¢VX
+	//é‡‡æ ·é¡ºåºï¼šILã€IYã€IXã€VYã€VX
     adc_regular_channel_config(ADC0, 0, ADC_CHANNEL_2, ADC_SAMPLETIME_7POINT5);
     adc_regular_channel_config(ADC0, 1, ADC_CHANNEL_0, ADC_SAMPLETIME_7POINT5);
     adc_regular_channel_config(ADC0, 2, ADC_CHANNEL_6, ADC_SAMPLETIME_7POINT5);
@@ -191,33 +281,24 @@ void adc0_config(void)
 void nvic_config(void)
 {
     nvic_irq_enable(DMA0_Channel0_IRQn, 0, 0);
+    nvic_irq_enable(TIMER5_IRQn, 2, 0);
 }
 
-/*!
-    \brief      this function handles DMA0_Channel3_IRQHandler interrupt
-    \param[in]  none
-    \param[out] none
-    \retval     none
-*/
-void DMA0_Channel0_IRQHandler(void)
-{
-    if(dma_interrupt_flag_get(DMA0, DMA_CH0, DMA_INT_FLAG_FTF)){     
-		
-        dma_interrupt_flag_clear(DMA0, DMA_CH0, DMA_INT_FLAG_G);
-        gpio_bit_reset(LED3_GPIO_PORT, LED3_PIN);
-		
-    }
-}
+
 
 /*!
-    \brief      »ã¾ÛËùÓĞÍâÉè³õÊ¼»¯
+    \brief      æ±‡èšæ‰€æœ‰å¤–è®¾åˆå§‹åŒ–
 */
 void peripheral_config(void)
 {
     gpio_config();
-    timer0_pwm_config();
+   
 	dma_config();
     adc0_config();
+	timer0_pwm_config();
+
+    timer5_config();
+    encoder_config();
 	
 	nvic_config();
 }

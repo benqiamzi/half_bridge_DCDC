@@ -8,6 +8,8 @@
 #include <stdarg.h>
 #include "systick.h"
 
+#define USE_HARD_SPI
+
 //所使用的引脚定义
 #define SCL_GPIO_Pin   GPIO_PIN_3   // PB3, SPI0_SCK
 #define SDA_GPIO_Pin   GPIO_PIN_5   // PB5, SPI0_MOSI
@@ -15,7 +17,7 @@
 #define DC_GPIO_Pin    GPIO_PIN_6   // PB6, 数据/命令
 #define RES_GPIO_Pin   GPIO_PIN_4   // PB4, 复位
 #define GPIOx          GPIOB
-#define SPIx           SPI2         // 使用 SPI0
+#define SPIx           SPI2         // 使用 SPI2 (PB3=SCK, PB5=MOSI 需 SPI2 remap)
 
 /**
   * 数据存储格式：
@@ -172,45 +174,59 @@ void OLED_W_CS(uint8_t BitValue)
 		gpio_bit_reset(GPIOA,CS_GPIO_Pin);
 }
 
+
+#ifdef USE_HARD_SPI
 /*********************引脚配置*/
-//void OLED_gpioInit(void)
-//{
-//    /* 使能时钟 */
-//    rcu_periph_clock_enable(RCU_GPIOB);
-//    rcu_periph_clock_enable(RCU_SPI2);
-//	rcu_periph_clock_enable(RCU_GPIOA);
-//	
-//	
-//    gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_15);	
-//	gpio_init(GPIOB, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, SCL_GPIO_Pin|SDA_GPIO_Pin);
+void OLED_gpioInit(void)
+{
+   	/* 使能时钟 */
+   	rcu_periph_clock_enable(RCU_GPIOB);
+   	rcu_periph_clock_enable(RCU_SPI2);          // SPI0 非 SPI2（PB3/PB5 是 SPI0 引脚）
+	rcu_periph_clock_enable(RCU_GPIOA);
+	rcu_periph_clock_enable(RCU_AF);
+	   /* 2. 禁用 JTAG，保留 SWD（释放 PB3/JTDO, PB4/JNTRST, PA15/JTDI 作为 GPIO） */
+    gpio_pin_remap_config(GPIO_SWJ_SWDPENABLE_REMAP, ENABLE);
+    /* 将 SPI0 重映射到 PB3(SCK)/PB5(MOSI) - 替代默认 PA5/PA7 */
+    // gpio_pin_remap_config(GPIO_SPI0_REMAP, ENABLE);
 
-//    gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, RES_GPIO_Pin|DC_GPIO_Pin);
+   gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, CS_GPIO_Pin);	
+	gpio_init(GPIOB, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, SCL_GPIO_Pin|SDA_GPIO_Pin);
 
-//	spi_i2s_deinit(SPIx); // 先完全复位SPI
-//	
-//    spi_parameter_struct spi_init_struct;
-//    spi_struct_para_init(&spi_init_struct);
-//    spi_init_struct.trans_mode     = SPI_TRANSMODE_FULLDUPLEX;  // 全双工
-//    spi_init_struct.device_mode    = SPI_MASTER;               // 主机模式
-//    spi_init_struct.frame_size     = SPI_FRAMESIZE_8BIT;       // 8位数据
-//    spi_init_struct.clock_polarity_phase = SPI_CK_PL_LOW_PH_1EDGE; // SPI模式3（根据OLED要求通常为模式0或3，这里用模式3示例，可调整）
-//    spi_init_struct.nss            = SPI_NSS_SOFT;             
-//    spi_init_struct.prescale       = SPI_PSC_32;                // 分频系数（根据主频调整，这里分频后约 120MHz/8=15MHz，OLED通常支持10MHz左右）
-//    spi_init_struct.endian          = SPI_ENDIAN_MSB;          // 高位在前
-//    spi_init(SPIx, &spi_init_struct);
-//    spi_enable(SPIx);
-//	 //上电默认电平
-//    OLED_W_CS(1);
-//    OLED_W_RES(1);
-//    OLED_W_DC(0);
+   gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, RES_GPIO_Pin|DC_GPIO_Pin);
 
-//}
+	spi_i2s_deinit(SPIx); // 先完全复位SPI
+	spi_nss_output_enable(SPIx);
+	
+   spi_parameter_struct spi_init_struct;
+   spi_struct_para_init(&spi_init_struct);
+   spi_init_struct.trans_mode     = SPI_TRANSMODE_FULLDUPLEX;  // 全双工
+   spi_init_struct.device_mode    = SPI_MASTER;               // 主机模式
+   spi_init_struct.frame_size     = SPI_FRAMESIZE_8BIT;       // 8位数据
+   spi_init_struct.clock_polarity_phase = SPI_CK_PL_HIGH_PH_1EDGE; // CPOL=0,CPHA=0 → Mode 0（与软件 SPI 一致）
+   spi_init_struct.nss            = SPI_NSS_HARD;             
+   spi_init_struct.prescale       = SPI_PSC_16;                // 分频系数（根据主频调整，这里分频后约 120MHz/32=3.75MHz，OLED通常支持10MHz左右）
+   spi_init_struct.endian          = SPI_ENDIAN_MSB;          // 高位在前
+   spi_init(SPIx, &spi_init_struct);
 
+   spi_enable(SPIx);
+   /* 上电默认电平 */
+   OLED_W_CS(1);
+   OLED_W_RES(1);
+   OLED_W_DC(1);
+
+}
+
+#endif
+
+#ifdef USE_SOFT_SPI
 void OLED_gpioInit(void)
 {
     /* 1. 使能 GPIO 时钟 */
     rcu_periph_clock_enable(RCU_GPIOB);
     rcu_periph_clock_enable(RCU_GPIOA);
+	rcu_periph_clock_enable(RCU_AF);
+	   /* 2. 禁用 JTAG，保留 SWD（释放 PB3/JTDO, PB4/JNTRST, PA15/JTDI 作为 GPIO） */
+    gpio_pin_remap_config(GPIO_SWJ_SWDPENABLE_REMAP, ENABLE);
 
     /* 2. 将所有控制引脚配置为推挽输出 */
     // CS(PA15), RES(PB4), DC(PB6), SCL(PB3), SDA(PB5)
@@ -226,6 +242,9 @@ void OLED_gpioInit(void)
 	OLED_W_CS(1);
 
 }
+#endif
+
+#ifdef USE_SOFT_SPI
 
 /*通信协议*********************/
 /**
@@ -280,50 +299,51 @@ void OLED_WriteData(uint8_t *Data, uint8_t Count)
 	}
 	OLED_W_CS(1);					//拉高CS，结束通信
 }
+#endif
 
+#ifdef USE_HARD_SPI
 
+/**
+ * 函    数：OLED写命令
+ * 参    数：Command 要写入的命令值，范围：0x00~0xFF
+ * 返 回 值：无
+ */
+void OLED_WriteCommand(uint8_t Command)
+{
+	OLED_W_DC(0);					//拉低DC，表示即将发送命令
+	// OLED_W_CS(0);
 
-///**
-//  * 函    数：OLED写命令
-//  * 参    数：Command 要写入的命令值，范围：0x00~0xFF
-//  * 返 回 值：无
-//  */
-//void OLED_WriteCommand(uint8_t Command)
-//{
-//	OLED_W_DC(0);					//拉低DC，表示即将发送命令
-//	OLED_W_CS(0);
+   /* 等待发送缓冲区空 */
+   while(spi_i2s_flag_get(SPIx, SPI_FLAG_TBE) == RESET);
+   spi_i2s_data_transmit(SPIx, Command);
+   /* 等待发送完成 */
+   while(spi_i2s_flag_get(SPIx, SPI_FLAG_TRANS) == SET);
 
-//    /* 等待发送缓冲区空 */
-//    while(spi_i2s_flag_get(SPIx, SPI_FLAG_TBE) == RESET);
-//    spi_i2s_data_transmit(SPIx, Command);
-//    /* 等待发送完成 */
-//    while(spi_i2s_flag_get(SPIx, SPI_FLAG_TRANS) == SET);
+	// OLED_W_CS(1);
+}
 
-//	OLED_W_CS(1);
-//}
+/**
+ * 函    数：OLED写数据
+ * 参    数：Data 要写入数据的起始地址
+ * 参    数：Count 要写入数据的数量
+ * 返 回 值：无
+ */
+void OLED_WriteData(uint8_t *Data, uint8_t Count)
+{
+   if(Count == 0) return;
 
-///**
-//  * 函    数：OLED写数据
-//  * 参    数：Data 要写入数据的起始地址
-//  * 参    数：Count 要写入数据的数量
-//  * 返 回 值：无
-//  */
-//void OLED_WriteData(uint8_t *Data, uint8_t Count)
-//{
-//    if(Count == 0) return;
+   OLED_W_DC(1);           // DC=1 表示数据
+	// OLED_W_CS(0);
 
-//    OLED_W_DC(1);           // DC=1 表示数据
-//	OLED_W_CS(0);
-
-//    for(uint8_t i = 0; i < Count; i++)
-//    {
-//        while(spi_i2s_flag_get(SPIx, SPI_FLAG_TBE) == RESET);
-//			spi_i2s_data_transmit(SPIx, Data[i]);
-//        while(spi_i2s_flag_get(SPIx, SPI_FLAG_TRANS) == SET);
-//    }
-//	OLED_W_CS(1);
-//}
-
+   for(uint8_t i = 0; i < Count; i++)
+   {
+       while(spi_i2s_flag_get(SPIx, SPI_FLAG_TBE) == RESET);
+			spi_i2s_data_transmit(SPIx, Data[i]);
+       while(spi_i2s_flag_get(SPIx, SPI_FLAG_TRANS) == SET);
+   }
+	// OLED_W_CS(1);
+}
+#endif
 /*********************通信协议*/
 
 

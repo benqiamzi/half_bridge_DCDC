@@ -38,10 +38,8 @@ OF SUCH DAMAGE.
 #include "main.h"
 #include "gd32e10x_eval.h"
 #include "jkd_oled.h"
-#include "drv_usb_hw.h"
-#include "cdc_acm_core.h"
+#include "sys_bsp.h"
 
-usb_core_driver cdc_acm;
 
 
 /*!
@@ -58,44 +56,13 @@ int main(void)
     /* initilize the LEDs, USART and key */
 	peripheral_config();
 	
-	usb_rcu_config();
+    my_sys_init();
+    
 
-    usb_timer_init();
-
-    usbd_init(&cdc_acm, &cdc_desc, &cdc_class);
-
-    usb_intr_config();
-	
-	
-	OLED_Init();
-	OLED_Clear();
-	OLED_Printf(0,Line0,OLED_8X16,"hello");
-	OLED_Update();
-	adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
-	
     while (1){
 		
-		
-		printf("hello\n");
-		delay_1ms(500);
-		
+		task_list();
+
     }
 }
 
-#ifdef GD_ECLIPSE_GCC
-/* retarget the C library printf function to the USART, in Eclipse GCC environment */
-int __io_putchar(int ch)
-{
-    usart_data_transmit(EVAL_COM0, (uint8_t)ch);
-    while(RESET == usart_flag_get(EVAL_COM0, USART_FLAG_TBE));
-    return ch;
-}
-#else
-/* retarget the C library printf function to the USART */
-int fputc(int ch, FILE *f)
-{
-//	usb_txfifo_write(&cdc_acm.regs,(uint8_t*)&ch,1,1);
-//	cdc_acm_data_send(&cdc_acm);
-    return ch;
-}
-#endif /* GD_ECLIPSE_GCC */
