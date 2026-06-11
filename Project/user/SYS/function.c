@@ -23,6 +23,13 @@ char str[50] = {0};
 uint16_t curr_cnt = 0;
 uint16_t volt_cnt = 0;
 
+uint8_t param_set_idx = 0;
+const float param_set_step[] = {0.1f, 0.2f, 0.5f, 1.0f, 2.0f};
+const float vol_range_x[] = {15.0f, 24.0f};
+const float vol_range_y[] = {5.0f, 15.0f};
+const float cur_range_x[] = {0.0f, 2.5f};
+const float cur_range_y[] = {0.0f, 5.0f};
+
 void oled_show(void);
 void key_Proc(void);
 void led_Proc(void);
@@ -229,7 +236,7 @@ uint32_t oled_tick = 0;
 
 CCMRAM void oled_show(void)
 {
-	if(uwTick - oled_tick < 50)
+	if(uwTick - oled_tick < 200)
 		return;
 	
 	oled_tick = uwTick;
@@ -239,17 +246,17 @@ CCMRAM void oled_show(void)
 	{
 		case UI_PARAM:	
 		{
-			OLED_Printf(0,Line0, OLED_8X16, "Vx:%0.2fV ", my_adc_sample.Vx_f32);
+			OLED_Printf(0,Line0, OLED_8X16, "Vx:%0.3fV ", my_adc_sample.Vx_f32);
 			if(ctrState.run_flag == RUN_MODE_RUN)
 			{
-				OLED_ShowString(10*8,Line0,"RUN ",OLED_8X16);
+				OLED_ShowString(10*8,Line0," RUN ",OLED_8X16);
 			}
 			else
 			{
-				OLED_ShowString(10*8,Line0,"STOP",OLED_8X16);
+				OLED_ShowString(10*8,Line0," STOP ",OLED_8X16);
 			}
 
-			OLED_Printf(0,Line1, OLED_8X16, "Ix:%0.2fA  %d  ", my_adc_sample.Ix_f32, \
+			OLED_Printf(0,Line1, OLED_8X16, "Ix:%0.3fA  %d  ", my_adc_sample.Ix_f32, \
 				ctrState.ctr_mode == CTR_BUCK ? pwm_value.Q1Duty : pwm_value.Q2Duty);
 			if(ctrState.ctr_mode == CTR_BUCK)
 			{
@@ -273,17 +280,56 @@ CCMRAM void oled_show(void)
 				OLED_ShowString(10*8,Line3," CC ",OLED_8X16);
 			}
 			
-			OLED_Printf(0,Line2, OLED_8X16, "Vy:%0.2fV  ", my_adc_sample.Vy_f32);
-			OLED_Printf(0,Line3, OLED_8X16, "Iy:%0.2fA    ", my_adc_sample.Iy_f32);
+			OLED_Printf(0,Line2, OLED_8X16, "Vy:%0.3fV ", my_adc_sample.Vy_f32);
+			OLED_Printf(0,Line3, OLED_8X16, "Iy:%0.3fA ", my_adc_sample.Iy_f32);
 			break;
 		}
 		case UI_SET:
 		{
-			OLED_Printf(0,Line0, OLED_8X16, "Iy:%0.2fA   ", my_adc_sample.Iy_f32);
-			OLED_Printf(0,Line1, OLED_8X16, "Iset:%0.2fA  ", my_ctrvalue.Iyset_f32);
+			const uint8_t out_mode_num = 4, run_flag_num = 8;
+			if(ctrState.ctr_mode == CTR_BUCK)
+			{
+				OLED_Printf(0,Line0, OLED_8X16, "Buck ");
+				OLED_Printf(0,Line1, OLED_8X16, "Vy:%0.3fV    ", my_adc_sample.Vy_f32);
+				OLED_Printf(0,Line2, OLED_8X16, "Iy:%0.3fA   ", my_adc_sample.Iy_f32);
+				if(ctrState.out_mode == OUT_CV)
+				{
+					OLED_ShowString(out_mode_num*8,Line0," CV ",OLED_8X16);
+					OLED_Printf(0,Line3, OLED_8X16, "Vset:%0.3fV  ", my_ctrvalue.Vyset_f32);
+				}
+				else if(ctrState.out_mode == OUT_CC)
+				{
+					OLED_ShowString(out_mode_num*8,Line0," CC ",OLED_8X16);
+					OLED_Printf(0,Line3, OLED_8X16, "Iset:%0.3fA  ", my_ctrvalue.Iyset_f32);
+				}
+			}
+			else if(ctrState.ctr_mode == CTR_BOOST)
+			{
+				OLED_Printf(0,Line0, OLED_8X16, "Boost ");
+				OLED_Printf(0,Line1, OLED_8X16, "Vx:%0.3fV    ", my_adc_sample.Vx_f32);
+				OLED_Printf(0,Line2, OLED_8X16, "Ix:%0.3fA   ", my_adc_sample.Ix_f32);
+				if(ctrState.out_mode == OUT_CV)
+				{
+					OLED_ShowString(out_mode_num*8,Line0," CV ",OLED_8X16);
+					OLED_Printf(0,Line3, OLED_8X16, "Vset:%0.3fV  ", my_ctrvalue.Vxset_f32);
+				}
+				else if(ctrState.out_mode == OUT_CC)
+				{
+					OLED_ShowString(out_mode_num*8,Line0," CC ",OLED_8X16);
+					OLED_Printf(0,Line3, OLED_8X16, "Iset:%0.3fA  ", my_ctrvalue.Ixset_f32);
+				}
+
+			}
+			if(ctrState.run_flag == RUN_MODE_RUN)
+			{
+				OLED_ShowString(run_flag_num*8,Line0,"R ",OLED_8X16);
+			}
+			else
+			{
+				OLED_ShowString(run_flag_num*8,Line0,"S",OLED_8X16);
+			}
+			OLED_ShowFloatNum(11*8,Line0,param_set_step[param_set_idx],1,1,OLED_8X16);
 			
-			OLED_Printf(0,Line2, OLED_8X16, "Vx:%0.2fV    ", my_adc_sample.Vx_f32);
-			OLED_Printf(0,Line3, OLED_8X16, "Vset:%0.2fV  ", my_ctrvalue.Vyset_f32);
 			break;
 		}
 		default:
@@ -319,6 +365,10 @@ void key_read(void)
 	{
 		key_value = 4;
 	}
+	else if(gpio_input_bit_get(ENCODER_PORT, ENCODER_PIN) == 0)
+	{
+		key_value = 5;
+	}
 	
 	key_down = key_value & (key_value ^ key_old);
 	key_old = key_value;
@@ -336,8 +386,6 @@ void key_Proc(void)
 	key_tick = uwTick;
 	
 	key_read();
-	
-	gpio_bit_reset(GPIOB,GPIO_PIN_11);
 
 	if(key_down == 1)
 	{
@@ -350,27 +398,131 @@ void key_Proc(void)
 	// 控制模式切换
 	else if (key_down == 2)
 	{
-		ctrState.ctr_mode = (ctrState.ctr_mode + 1) % 2;
-		cdc_send_data((uint8_t *)"key 2 pressed\n", strlen("key 2 pressed\n"));
+		if(ctrState.ui == UI_PARAM)
+		{
+			param_set_idx = 0;
+			ctrState.run_flag = RUN_MODE_STOP;
+			ctrState.SMFlag = Wait;
+			ctrState.ctr_mode = (ctrState.ctr_mode + 1) % 2;
+			cdc_send_data((uint8_t *)"key 2 pressed\n", strlen("key 2 pressed\n"));
+		}
+		else
+		{
+			if(ctrState.out_mode == OUT_CV)
+			{
+				param_set_idx = (param_set_idx + 1) % (sizeof(param_set_step)/sizeof(param_set_step[0]));
+			}
+			else
+			{
+				param_set_idx = (param_set_idx + 1) % 3;
+			}
+		}
 	}
 	// 输出模式切换
 	else if (key_down == 3)
 	{
-		ctrState.out_mode = !ctrState.out_mode;
+		if(ctrState.ui == UI_PARAM)
+		{
+			param_set_idx = 0;
+			ctrState.run_flag = RUN_MODE_STOP;
+			ctrState.SMFlag = Wait;
+			ctrState.out_mode = !ctrState.out_mode;
+		}
+		else
+		{
+			if(ctrState.ctr_mode == CTR_BUCK)
+			{
+				if(ctrState.out_mode == OUT_CV)
+				{
+					my_ctrvalue.Vyset_f32 += param_set_step[param_set_idx];
+					if(my_ctrvalue.Vyset_f32 > vol_range_y[1])
+						my_ctrvalue.Vyset_f32 = vol_range_y[1];
+					loop_set_vol_y(my_ctrvalue.Vyset_f32);
+				}
+				else if(ctrState.out_mode == OUT_CC)
+				{
+					my_ctrvalue.Iyset_f32 += param_set_step[param_set_idx];
+					if(my_ctrvalue.Iyset_f32 > cur_range_y[1])
+						my_ctrvalue.Iyset_f32 = cur_range_y[1];
+					loop_set_cur_y(my_ctrvalue.Iyset_f32);
+				}
+				
+			}
+			else if(ctrState.ctr_mode == CTR_BOOST)
+			{
+				if(ctrState.out_mode == OUT_CV)
+				{
+					my_ctrvalue.Vxset_f32 += param_set_step[param_set_idx];
+					if(my_ctrvalue.Vxset_f32 > vol_range_x[1])
+						my_ctrvalue.Vxset_f32 = vol_range_x[1];
+					loop_set_vol_x(my_ctrvalue.Vxset_f32);
+				}
+				else if(ctrState.out_mode == OUT_CC)
+				{
+					my_ctrvalue.Ixset_f32 += param_set_step[param_set_idx];
+					if(my_ctrvalue.Ixset_f32 > cur_range_x[1])
+						my_ctrvalue.Ixset_f32 = cur_range_x[1];
+					loop_set_cur_x(my_ctrvalue.Ixset_f32);
+				}
+			}
+		}
 	}
 	
 	// 启动/关闭
 	else if (key_down == 4)
 	{
+		if(ctrState.ui == UI_SET)
+		{
+			if(ctrState.ctr_mode == CTR_BUCK)
+			{
+				if(ctrState.out_mode == OUT_CV)
+				{
+					my_ctrvalue.Vyset_f32 -= param_set_step[param_set_idx];
+					if(my_ctrvalue.Vyset_f32 < vol_range_y[0])
+						my_ctrvalue.Vyset_f32 = vol_range_y[0];
+					loop_set_vol_y(my_ctrvalue.Vyset_f32);
+				}
+				else if(ctrState.out_mode == OUT_CC)
+				{
+					my_ctrvalue.Iyset_f32 -= param_set_step[param_set_idx];
+					if(my_ctrvalue.Iyset_f32 < cur_range_y[0])
+						my_ctrvalue.Iyset_f32 = cur_range_y[0];
+
+					loop_set_cur_y(my_ctrvalue.Iyset_f32);
+				}
+				
+			}
+			else if(ctrState.ctr_mode == CTR_BOOST)
+			{
+				if(ctrState.out_mode == OUT_CV)
+				{
+					my_ctrvalue.Vxset_f32 -= param_set_step[param_set_idx];
+					if(my_ctrvalue.Vxset_f32 < vol_range_x[0])
+						my_ctrvalue.Vxset_f32 = vol_range_x[0];
+					loop_set_vol_x(my_ctrvalue.Vxset_f32);
+				}
+				else if(ctrState.out_mode == OUT_CC)
+				{
+					my_ctrvalue.Ixset_f32 -= param_set_step[param_set_idx];
+					if(my_ctrvalue.Ixset_f32 < cur_range_x[0])
+						my_ctrvalue.Ixset_f32 = cur_range_x[0];
+					loop_set_cur_x(my_ctrvalue.Ixset_f32);
+				}
+			}
+
+		}
+	}
+	else if(key_down == 5)
+	{
+		// 旋转编码器按下事件
 		ctrState.run_flag = !ctrState.run_flag;
 		
 		if(ctrState.run_flag == RUN_MODE_STOP)
 		{
-			ctrState.SMFlag = Wait;
-			
+			ctrState.SMFlag = Wait;	
 		}
-		gpio_bit_set(GPIOB,GPIO_PIN_11);
 		fsm_Proc();
+		
 	}
 		
 }

@@ -14,7 +14,14 @@ PWM_VALUE_t pwm_value ={
 
 #define DEADTIME 400
 
-CtlValue_t my_ctrvalue;
+CtlValue_t my_ctrvalue = {
+	.k_vy_a = 1.0015f,
+	.k_vy_b = 0.2348f,
+	.k_vx_a = 1.0000f,
+	.k_vx_b = 0.0266f,
+
+
+};
 
 void CtlValue_Init(void)
 {
@@ -37,12 +44,12 @@ void CtlValue_Init(void)
 	my_ctrvalue.Gi = 1.0f/my_ctrvalue.Gi_re;	 // 电流环增益
 	
 	
-	my_ctrvalue.Vyset_q15 = my_ctrvalue.Vyset_f32 * my_ctrvalue.Gv;
+	my_ctrvalue.Vyset_q15 = (my_ctrvalue.Vyset_f32*my_ctrvalue.k_vy_a+my_ctrvalue.k_vy_b) * my_ctrvalue.Gv;
 	my_ctrvalue.Iyset_q15 = (my_ctrvalue.Iyset_f32*my_ctrvalue.k_iy_a+my_ctrvalue.k_iy_b) \
 				* my_ctrvalue.Gi+my_ctrvalue.offset;
-
-	my_ctrvalue.Vxset_q15 = my_ctrvalue.Vxset_f32 * my_ctrvalue.Gv;
-	my_ctrvalue.Ixset_q15 = my_ctrvalue.offset - (my_ctrvalue.Ixset_f32*my_ctrvalue.k_iy_a+my_ctrvalue.k_iy_b) \
+	
+	my_ctrvalue.Vxset_q15 = (my_ctrvalue.Vxset_f32*my_ctrvalue.k_vx_a+my_ctrvalue.k_vx_b) * my_ctrvalue.Gv;
+	my_ctrvalue.Ixset_q15 = my_ctrvalue.offset - (my_ctrvalue.Ixset_f32) \
 				* my_ctrvalue.Gi;
 }
 
@@ -126,26 +133,26 @@ void ctr_pwm_stop(void)
 void loop_set_vol_x(float vol)
 {
 	my_ctrvalue.Vxset_f32 = vol;
-	my_ctrvalue.Vxset_q15 = my_ctrvalue.Vxset_f32 * my_ctrvalue.Gv;
+	my_ctrvalue.Vxset_q15 = (my_ctrvalue.Vxset_f32*my_ctrvalue.k_vx_a+my_ctrvalue.k_vx_b) * my_ctrvalue.Gv;
 }
 
 void loop_set_vol_y(float vol)
 {
 	my_ctrvalue.Vyset_f32 = vol;
-	my_ctrvalue.Vyset_q15 = my_ctrvalue.Vyset_f32 * my_ctrvalue.Gv;
+	my_ctrvalue.Vyset_q15 = (my_ctrvalue.Vyset_f32*my_ctrvalue.k_vy_a+my_ctrvalue.k_vy_b) * my_ctrvalue.Gv;
 }
 
 void loop_set_cur_x(float cur)
 {
 	my_ctrvalue.Ixset_f32 = cur;
-	my_ctrvalue.Ixset_q15 = my_ctrvalue.offset - (my_ctrvalue.Ixset_f32*my_ctrvalue.k_iy_a+my_ctrvalue.k_iy_b) \
+	my_ctrvalue.Ixset_q15 = my_ctrvalue.offset - (my_ctrvalue.Ixset_f32) \
 				* my_ctrvalue.Gi;
 }
 
 void loop_set_cur_y(float cur)
 {
 	my_ctrvalue.Iyset_f32 = cur;
-	my_ctrvalue.Iyset_q15 = (my_ctrvalue.Iyset_f32*my_ctrvalue.k_iy_a+my_ctrvalue.k_iy_b) \
+	my_ctrvalue.Iyset_q15 = (my_ctrvalue.Iyset_f32) \
 				* my_ctrvalue.Gi+my_ctrvalue.offset;
 }
 

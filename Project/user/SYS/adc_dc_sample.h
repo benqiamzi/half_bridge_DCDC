@@ -27,6 +27,16 @@ typedef struct
     uint16_t Vy_raw;     // Y侧端电压原始值
     uint16_t Iy_raw;     // Y侧端电流原始值
 
+    float k_vx_a;
+    float k_vx_b;
+    float k_vy_a;
+    float k_vy_b;
+    float k_ix_a;
+    float k_ix_b;
+    float k_iy_a;
+    float k_iy_b;
+
+
 } ADC_SAMPLE_t;
 
 

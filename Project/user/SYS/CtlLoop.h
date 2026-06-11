@@ -33,8 +33,12 @@ typedef struct
 	
 	float k_iy_a;
 	float k_iy_b;
+	float k_ix_a;
+	float k_ix_b;
 	float k_vx_a;
 	float k_vx_b;
+	float k_vy_a;
+	float k_vy_b;
 
 }CtlValue_t;
 

@@ -1,14 +1,22 @@
 #include "sys_bsp.h"
 #include "adc_dc_sample.h"
 
+ADC_SAMPLE_t my_adc_sample = 
+{
+	.k_iy_a = 1.0028f,
+	.k_iy_b = +0.0028f,
+	.k_vy_a = 0.9995f,
+	.k_vy_b = -0.0475f,
 
-ADC_SAMPLE_t my_adc_sample;
+};
 
 uint16_t open_value = 0;
 
 static uint8_t cntSCP = 0;
 static uint8_t LoopCnt = 0;
 static _Bool cnt_flag = 0;
+
+
 void ADC_ScpProtection(void)
 {
 	if(adc_value[0]<1300&&adc_value[2]<1000)
@@ -90,8 +98,6 @@ CCMRAM void adc_filter(void)
 	IySum = IySum+my_adc_sample.Iy_raw - (IySum>>filter_size);
 	my_adc_sample.Iy_q15 = (IySum>>filter_size);
 	
-	
-	
 }
 
 void adc_disp(void)
@@ -107,16 +113,19 @@ void adc_disp(void)
 	//计算Iy电流
 	tmp = ((my_adc_sample.Iy_q15- my_ctrvalue.offset)>0)?\
 	(my_adc_sample.Iy_q15- my_ctrvalue.offset):(my_ctrvalue.offset-my_adc_sample.Iy_q15);
-	my_adc_sample.Iy_f32 = tmp*my_ctrvalue.Gi_re;
+	my_adc_sample.Iy_f32 = tmp*my_ctrvalue.Gi_re*my_adc_sample.k_iy_a+my_adc_sample.k_iy_b;
+
 	if(my_adc_sample.Iy_f32<-0.001f)
 	{
 		my_adc_sample.Iy_f32 = 0.00f;
 	}
 	
 	my_adc_sample.Vx_f32 = my_adc_sample.Vx_q15*my_ctrvalue.Gv_re;
-	// my_adc_sample.Vx_f32 = (my_adc_sample.Vx_f32<-0.001f)?0:my_adc_sample.Vx_f32;
-	my_adc_sample.Vy_f32 = my_adc_sample.Vy_q15*my_ctrvalue.Gv_re;
-
+	my_adc_sample.Vy_f32 = my_adc_sample.Vy_q15*my_ctrvalue.Gv_re*my_adc_sample.k_vy_a+my_adc_sample.k_vy_b;
+	if(my_adc_sample.Vy_f32<-0.0001f)
+	{
+		my_adc_sample.Vy_f32 = 0.00f;
+	}
 }
 
 

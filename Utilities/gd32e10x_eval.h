@@ -59,6 +59,8 @@ OF SUCH DAMAGE.
 #define KEY3_PORT                        GPIOA
 #define KEY4_PIN                        GPIO_PIN_12
 #define KEY4_PORT                        GPIOB
+#define ENCODER_PIN                        GPIO_PIN_7
+#define ENCODER_PORT                        GPIOB
 
 #define LED_PORT                  GPIOC
 #define LED1_PIN                         GPIO_PIN_13

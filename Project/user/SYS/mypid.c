@@ -11,7 +11,7 @@ void my_Pid_Init(void)
 	PID_Init(&pid_CC_Buck, 0.05f, 1.0f, 0.0001f,MIN_DUTY, MAX_DUTY,MIN_DUTY, MAX_DUTY,0.95f);
 	PID_Init(&pid_CV_Buck, 0.1f, 5.0f, 0.001f,MIN_DUTY, MAX_DUTY,MIN_DUTY, MAX_DUTY,0.95f);
 	PID_Init(&pid_CC_Boost, 0.1f, 5.0f, 0.001f,MIN_DUTY, MAX_DUTY,MIN_DUTY, MAX_DUTY,0.95f);
-	PID_Init(&pid_CV_Boost, 0.01f, 1.0f, 0.001f,MIN_DUTY, MAX_DUTY,MIN_DUTY, MAX_DUTY,0.95f);
+	PID_Init(&pid_CV_Boost, 0.05f, 2.0f, 0.001f,MIN_DUTY, MAX_DUTY,MIN_DUTY, MAX_DUTY,0.95f);
 }
  
 // 初始化PID控制器

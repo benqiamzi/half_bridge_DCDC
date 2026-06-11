@@ -37,7 +37,8 @@ void gpio_config(void)
     gpio_init(KEY2_PORT, GPIO_MODE_IPU, GPIO_OSPEED_50MHZ, KEY2_PIN);
     gpio_init(KEY3_PORT, GPIO_MODE_IPU, GPIO_OSPEED_50MHZ, KEY3_PIN);
     gpio_init(KEY4_PORT, GPIO_MODE_IPU, GPIO_OSPEED_50MHZ, KEY4_PIN);
-    
+    gpio_init(ENCODER_PORT, GPIO_MODE_IPU, GPIO_OSPEED_50MHZ, ENCODER_PIN);
+
     /* 互补 PWM 引脚 */
     gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, BUCK_PWM_HIGH_PIN);
     gpio_init(GPIOB, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, BUCK_PWM_LOW_PIN);
@@ -118,13 +119,13 @@ void encoder_config(void)
     timer_init(TIMER1, &timer_initpara);
 
     /* 4) 配置通道 2/3 为输入捕获，直接 TI 模式 */
-    timer_input_capture_parameter_struct_init(&icpara);
+    timer_channel_input_struct_para_init(&icpara);
     icpara.icpolarity  = TIMER_IC_POLARITY_RISING;
     icpara.icselection = TIMER_IC_SELECTION_DIRECTTI;
     icpara.icprescaler = TIMER_IC_PSC_DIV1;
     icpara.icfilter    = 0;
-    timer_input_capture_config(TIMER1, TIMER_CH_2, &icpara);
-    timer_input_capture_config(TIMER1, TIMER_CH_3, &icpara);
+    timer_input_capture_config(TIMER1, TIMER_CH_0, &icpara);
+    timer_input_capture_config(TIMER1, TIMER_CH_1, &icpara);
 
     /* 5) 启用编码器模式 */
     timer_quadrature_decoder_mode_config(TIMER1,
