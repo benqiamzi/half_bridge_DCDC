@@ -19,7 +19,7 @@ typedef enum
 {
 	UI_PARAM= 0,
 	UI_SET,
-	
+	UI_ERR
 }UI_M;
 
 typedef enum

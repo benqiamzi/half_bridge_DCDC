@@ -1,10 +1,6 @@
 #ifndef __SYS_BSP_H
 #define __SYS_BSP_H
 
-//#include "sys_bsp.h"
-
-#define V_MAX 40.0f 
-
 #define CCMRAM  __attribute__((section("RAMCODE")))
 
 #ifndef q15_t
@@ -22,7 +18,7 @@
 #include "gd32e10x_eval.h"
 
 #include "function.h"
-//#include "ringBuf.h"
+#include "protection.h"
 #include "adc_dc_sample.h"
 #include <stdio.h>
 #include "mypid.h"

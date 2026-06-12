@@ -26,7 +26,7 @@ uint16_t volt_cnt = 0;
 uint8_t param_set_idx = 0;
 const float param_set_step[] = {0.1f, 0.2f, 0.5f, 1.0f, 2.0f};
 const float vol_range_x[] = {15.0f, 24.0f};
-const float vol_range_y[] = {5.0f, 15.0f};
+const float vol_range_y[] = {5.0f, 16.0f};
 const float cur_range_x[] = {0.0f, 2.5f};
 const float cur_range_y[] = {0.0f, 5.0f};
 
@@ -48,6 +48,8 @@ CtrState_t ctrState = {
 
 void my_sys_init(void)
 {
+	ctr_pwm_ch(1);
+	ctr_pwm_chn(0);
 	ctr_pwm_stop();
 	my_Pid_Init();
 	CtlValue_Init();
@@ -84,6 +86,7 @@ void fsm_Proc(void)
 		case Init:
 			/* 完成初始化后进入等待态 */
 			ctrState.SMFlag = Wait;
+
 			adc_filter();
 			break;
 
@@ -92,6 +95,7 @@ void fsm_Proc(void)
 			/* 停止时保持最小占空比，等待启动命令 */
 			if(ctrState.run_flag == RUN_MODE_STOP)
 			{
+				protect_handle_reset();
 				ctr_pwm_stop();
 				PID_Reset(&pid_CC_Buck);
 				PID_Reset(&pid_CV_Buck);
@@ -119,6 +123,7 @@ void fsm_Proc(void)
 			break;
 
 		case Err:
+			ctrState.ui = UI_ERR;
 			break;
 
 		default:
@@ -332,6 +337,37 @@ CCMRAM void oled_show(void)
 			
 			break;
 		}
+		case UI_ERR:
+			char err_str[16] = {0};  // 数组初始化，全部清零（杜绝随机脏数据）
+
+			if(protect_handle.Vout_ovp_flag)
+			{
+				strcpy(err_str, "VOUT OVP ");
+			}
+			else if(protect_handle.ocp_flag)
+			{
+				strcpy(err_str, "VOUT OCP ");
+			}
+			else if(protect_handle.Vin_ovp_flag)
+			{
+				strcpy(err_str, "VIN OVP ");
+			}
+			else if(protect_handle.Vin_uvp_flag)
+			{
+				strcpy(err_str, "VIN UVP ");
+			}
+			else if(protect_handle.short_flag)
+			{
+				strcpy(err_str, "LP SHORT");
+			}
+			else
+			{
+				strcpy(err_str, "Normal  ");  // 无故障显示正常状态
+			}
+			OLED_Printf(0,Line1, OLED_8X16, " Err: %s ", err_str);
+			OLED_Printf(0,Line2, OLED_8X16, "press K1	");
+			
+			break;
 		default:
 		{
 			ctrState.ui = UI_PARAM;
@@ -389,9 +425,24 @@ void key_Proc(void)
 
 	if(key_down == 1)
 	{
-		ctrState.ui = (ctrState.ui + 1) % 2;
-		OLED_Clear();
-		cdc_send_data((uint8_t *)"key 1 pressed\n", strlen("key 1 pressed\n"));
+		if(ctrState.ui == UI_PARAM)
+		{
+			ctrState.ui = UI_SET;
+			OLED_Clear();
+			cdc_send_data((uint8_t *)"key 1 pressed\n", strlen("key 1 pressed\n"));
+		}
+		else if(ctrState.ui == UI_SET)
+		{
+			ctrState.ui = UI_PARAM;
+			OLED_Clear();
+		}
+		else if(ctrState.ui == UI_ERR)
+		{
+			ctrState.SMFlag = Init;
+			ctrState.ui = UI_PARAM;
+			ctrState.pwm_output_flag = 0;
+
+		}
 		
 	}
 	
@@ -511,12 +562,18 @@ void key_Proc(void)
 			}
 
 		}
+		else if(ctrState.ui == UI_PARAM)
+		{
+			// timer_enable(TIMER0);
+			ctr_pwm_ch(1);
+			ctr_pwm_chn(1);
+		}
 	}
 	else if(key_down == 5)
 	{
 		// 旋转编码器按下事件
 		ctrState.run_flag = !ctrState.run_flag;
-		
+		ctr_pwm_chn(1);
 		if(ctrState.run_flag == RUN_MODE_STOP)
 		{
 			ctrState.SMFlag = Wait;	

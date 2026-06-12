@@ -75,6 +75,9 @@ OF SUCH DAMAGE.
 #define LED3_GPIO_PORT                   GPIOC
 #define LED3_GPIO_CLK                    RCU_GPIOC
 
+#define BEEP_GPIO_PORT                   GPIOB
+#define BEEP_PIN                           GPIO_PIN_9
+
 extern volatile uint16_t adc_value[5];
 
      

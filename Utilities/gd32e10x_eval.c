@@ -31,6 +31,10 @@ void gpio_config(void)
     gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_10);
     gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_11);
     gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_10);
+
+    // 输出化蜂鸣器引脚
+    gpio_init(BEEP_GPIO_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, BEEP_PIN);
+    gpio_bit_reset(BEEP_GPIO_PORT, BEEP_PIN);
 	
 	/* 按键引脚 */
     gpio_init(KEY1_PORT, GPIO_MODE_IPU, GPIO_OSPEED_50MHZ, KEY1_PIN);
@@ -153,6 +157,8 @@ void timer0_pwm_config(void)
     rcu_periph_reset_enable(RCU_TIMER0RST);
     rcu_periph_reset_disable(RCU_TIMER0RST);
 
+
+
     
     timer_deinit(TIMER0);
     timer_struct_para_init(&timer_initpara);
@@ -166,8 +172,11 @@ void timer0_pwm_config(void)
     
     /* 通道0 配置（含互补输出）*/
     timer_channel_output_struct_para_init(&timer_ocintpara);
-    timer_ocintpara.outputstate  = TIMER_CCX_ENABLE;
-    timer_ocintpara.outputnstate = TIMER_CCXN_ENABLE;
+    // timer_ocintpara.outputstate  = TIMER_CCX_ENABLE;
+    // timer_ocintpara.outputnstate = TIMER_CCXN_ENABLE;
+    timer_ocintpara.outputstate  = TIMER_CCX_DISABLE;
+    timer_ocintpara.outputnstate = TIMER_CCXN_DISABLE;
+
     timer_ocintpara.ocpolarity   = TIMER_OC_POLARITY_HIGH;
     timer_ocintpara.ocnpolarity  = TIMER_OCN_POLARITY_HIGH;
     timer_ocintpara.ocidlestate  = TIMER_OC_IDLE_STATE_LOW;
@@ -198,6 +207,7 @@ void timer0_pwm_config(void)
     timer_primary_output_config(TIMER0, ENABLE);
     timer_auto_reload_shadow_enable(TIMER0);
     timer_enable(TIMER0);
+    // timer_disable(TIMER0);
 }
 
 void dma_config(void)

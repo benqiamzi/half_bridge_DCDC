@@ -16,7 +16,7 @@ PWM_VALUE_t pwm_value ={
 
 CtlValue_t my_ctrvalue = {
 	.k_vy_a = 1.0015f,
-	.k_vy_b = 0.2348f,
+	.k_vy_b = 0.0348f,
 	.k_vx_a = 1.0000f,
 	.k_vx_b = 0.0266f,
 
@@ -99,17 +99,35 @@ void duty_change(uint16_t duty,uint8_t ch)
 	timer_channel_output_pulse_value_config(TIMER0, ch, duty);
 }
 
-void ctr_pwm_ch_start(void)
+void ctr_pwm_ch(_Bool state)
 {
-	TIMER_CHCTL2(TIMER0) &= (~(uint32_t)TIMER_CHCTL2_CH0EN);
-	TIMER_CHCTL2(TIMER0) |= (uint32_t)TIMER_CCX_ENABLE;
+	if(state)
+	{
+		TIMER_CHCTL2(TIMER0) &= (~(uint32_t)TIMER_CHCTL2_CH0EN);
+		TIMER_CHCTL2(TIMER0) |= (uint32_t)TIMER_CCX_ENABLE;
+	}
+	else
+	{
+		TIMER_CHCTL2(TIMER0) &= (~(uint32_t)TIMER_CHCTL2_CH0EN);
+		TIMER_CHCTL2(TIMER0) |= (uint32_t)TIMER_CCX_DISABLE;
+
+	}
+	
 }
 
-void ctr_pwm_chn_start(void)
+void ctr_pwm_chn(_Bool state)
 {
+	if(state)
+	{
+		TIMER_CHCTL2(TIMER0) &= (~(uint32_t)TIMER_CHCTL2_CH0NEN);
+		TIMER_CHCTL2(TIMER0) |= (uint32_t)TIMER_CCXN_ENABLE;
+	}
+	else
+	{
+		TIMER_CHCTL2(TIMER0) &= (~(uint32_t)TIMER_CHCTL2_CH0NEN);
+		TIMER_CHCTL2(TIMER0) |= (uint32_t)TIMER_CCXN_DISABLE;
 
-	TIMER_CHCTL2(TIMER0) &= (~(uint32_t)TIMER_CHCTL2_CH0NEN);
-	TIMER_CHCTL2(TIMER0) |= (uint32_t)TIMER_CCXN_ENABLE;
+	}
 }
 
 void ctr_pwm_start(void)
@@ -234,6 +252,16 @@ void DMA0_Channel0_IRQHandler(void)
 		
         my_adc_sample.Vy_raw = adc_value[3];
 		my_adc_sample.Vx_raw = adc_value[4];
+		if(ctrState.ctr_mode == CTR_BUCK)
+		{
+			VoutSwOVP(&protect_handle, ctrState.pwm_output_flag, my_adc_sample.Vy_raw);
+			LoppSwShort(&protect_handle, ctrState.pwm_output_flag, my_adc_sample.Vx_raw, my_adc_sample.Ix_raw-my_ctrvalue.offset);
+		}
+		else
+		{
+			VoutSwOVP(&protect_handle, ctrState.pwm_output_flag, my_adc_sample.Vx_raw);
+			LoppSwShort(&protect_handle, ctrState.pwm_output_flag, my_adc_sample.Vy_raw, my_ctrvalue.offset-my_adc_sample.Iy_raw);
+		}
 		
 		if(ctrState.pwm_output_flag == 1)
         {

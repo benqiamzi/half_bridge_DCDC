@@ -51,14 +51,12 @@ typedef struct
 
 }PWM_VALUE_t;
 
-
-
 extern CtlValue_t my_ctrvalue;
 extern PWM_VALUE_t pwm_value;
 
 void duty_change(uint16_t duty,uint8_t ch);
-void ctr_pwm_ch_start(void);
-void ctr_pwm_chn_start(void);
+void ctr_pwm_ch(_Bool state);
+void ctr_pwm_chn(_Bool state);
 void ctr_pwm_start(void);
 void ctr_pwm_stop(void);
 
