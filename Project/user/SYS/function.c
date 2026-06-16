@@ -48,7 +48,7 @@ CtrState_t ctrState = {
 
 void my_sys_init(void)
 {
-	ctr_pwm_ch(1);
+	ctr_pwm_ch(0);
 	ctr_pwm_chn(0);
 	ctr_pwm_stop();
 	my_Pid_Init();
@@ -97,10 +97,7 @@ void fsm_Proc(void)
 			{
 				protect_handle_reset();
 				ctr_pwm_stop();
-				PID_Reset(&pid_CC_Buck);
-				PID_Reset(&pid_CV_Buck);
-				PID_Reset(&pid_CC_Boost);
-				PID_Reset(&pid_CV_Boost);
+				PID_Param_Reset();
 				pwm_value.Q1MaxDuty = MIN_DUTY;
 				pwm_value.Q2MaxDuty = MIN_DUTY;
 				ctrState.pwm_output_flag = 0;
@@ -124,6 +121,7 @@ void fsm_Proc(void)
 
 		case Err:
 			ctrState.ui = UI_ERR;
+			ctr_pwm_stop();
 			break;
 
 		default:
@@ -135,6 +133,8 @@ void fsm_Proc(void)
 
 CCMRAM void PWM_Rise(void)
 {
+	const static uint8_t step = 30;
+	const static uint8_t boost_step = 100;
 	static  uint16_t	Q1Cnt=0,Q2Cnt=0;//5mS计数器，PWM软起的计时器
 
 	switch(ctrState.STState)
@@ -158,53 +158,84 @@ CCMRAM void PWM_Rise(void)
 		}
 		case SSRun:
 		{
-			if(ctrState.pwm_output_flag == 0)
-			{
-				PID_Reset(&pid_CC_Buck);
-				PID_Reset(&pid_CV_Buck);
-				PID_Reset(&pid_CC_Boost);
-				PID_Reset(&pid_CV_Boost);
-				ctrState.pwm_output_flag = 1;
-			}
+			
 			if(ctrState.ctr_mode == CTR_BUCK)//工作于BUCK模式，上管Q2先软起，Q2软起后同步管Q2再软起
 			{
-				
+				if(ctrState.pwm_output_flag == 0)
+				{
+					PID_Param_Reset();
+					ctr_pwm_ch(1);
+					
+				}
+				ctrState.pwm_output_flag = 1;
 				if(pwm_value.Q1MaxDuty < MAX_DUTY)
 				{
 					Q1Cnt++;//计数器正式开始计数，5mS加1
-					pwm_value.Q1MaxDuty = MIN_DUTY+Q1Cnt*4;//Q1管占空比幅值增加
+					pwm_value.Q1MaxDuty = MIN_DUTY + Q1Cnt*step;//Q1管占空比幅值增加
 					
 					if(pwm_value.Q1MaxDuty >= MAX_DUTY )//累加到最大值
 					{
-
 						pwm_value.Q1MaxDuty = MAX_DUTY;
+						ctr_pwm_chn(1);
 					}
 					
 				}
-				
+				else
+				{
+					Q2Cnt++;//计数器正式开始计数，5mS加1	
+					pwm_value.Q2MaxDuty= Q2Cnt*step;//Q2占空比限制从最小开始		
+					if(pwm_value.Q2MaxDuty > MAX_DUTY)//累加到最大值
+						pwm_value.Q2MaxDuty  = MAX_DUTY ;	
+				}		
+				if(pwm_value.Q1MaxDuty==MAX_DUTY&&pwm_value.Q2MaxDuty==MAX_DUTY)//当Q1和Q2的最大占空比限制达到最大，则认为软启结束			
+				{
+					ctrState.SMFlag = Run;
+					ctrState.STState = SSInit;
+					Q1Cnt=0;
+					Q2Cnt=0;//主状态机跳转至正常运行运行状态
+				}
 			
 								
 			}
 			else if(ctrState.ctr_mode == CTR_BOOST)//工作BOOST模式，下管Q2先软起，Q2软起后同步管Q1再软起
 			{
-				if(pwm_value.Q2MaxDuty < MAX_DUTY)
+				if(ctrState.pwm_output_flag == 0)
+				{
+					PID_Param_Reset();
+					ctr_pwm_chn(1);
+					ctr_pwm_ch(1);
+					
+				}
+				ctrState.pwm_output_flag = 1;
+				if(pwm_value.Q2MaxDuty < BOOST_MAX_DUTY)
 				{
 					Q2Cnt++;//计数器正式开始计数，5mS加1	
-					pwm_value.Q2MaxDuty= MIN_DUTY+Q2Cnt*4;//Q2管占空比幅值增加
-					if(pwm_value.Q2MaxDuty > MAX_DUTY)//累加到最大值
+					pwm_value.Q2MaxDuty= MIN_DUTY+Q2Cnt*boost_step;//Q2管占空比幅值增加
+					if(pwm_value.Q2MaxDuty > BOOST_MAX_DUTY)//累加到最大值
 					{
-						pwm_value.Q2MaxDuty  = MAX_DUTY ;//下管Q2软起结束后，同步管Q1正式发波
+						// ctr_pwm_ch(1);
+						pwm_value.Q2MaxDuty  = BOOST_MAX_DUTY ;//下管Q2软起结束后，同步管Q1正式发波
+						pwm_value.Q1MaxDuty  = BOOST_MAX_DUTY ;
 					}
-				}	
+
+				}
+				// else
+				// {
+				// 	Q1Cnt++;//计数器正式开始计数，5mS加1	
+				// 	pwm_value.Q1MaxDuty= Q1Cnt*boost_step;//Q2占空比限制从最小开始		
+				// 	if(pwm_value.Q1MaxDuty > BOOST_MAX_DUTY)//累加到最大值
+				// 		pwm_value.Q1MaxDuty  = BOOST_MAX_DUTY;	
+				// }			
+				if(pwm_value.Q1MaxDuty==BOOST_MAX_DUTY&&pwm_value.Q2MaxDuty==BOOST_MAX_DUTY)//当Q1和Q2的最大占空比限制达到最大，则认为软启结束			
+				{
+					ctrState.SMFlag = Run;
+					ctrState.STState = SSInit;
+					Q1Cnt=0;
+					Q2Cnt=0;//主状态机跳转至正常运行运行状态
+				}
 			}
 
-			if(pwm_value.Q1MaxDuty==MAX_DUTY||pwm_value.Q2MaxDuty==MAX_DUTY)//当Q1和Q2的最大占空比限制达到最大，则认为软启结束			
-			{
-				ctrState.SMFlag = Run;
-				ctrState.STState = SSInit;
-				Q1Cnt=0;
-				Q2Cnt=0;//主状态机跳转至正常运行运行状态
-			}
+			
 			break;
 		}
 		default:
@@ -212,9 +243,6 @@ CCMRAM void PWM_Rise(void)
 	}
 
 }
-
-
-
 
 void task_list(void)
 {
@@ -410,6 +438,7 @@ void key_read(void)
 	key_old = key_value;
 }
 
+uint8_t show_direct = 0;
  uint8_t key_Cnt = 0;
  _Bool long_press_flag = 0;
  uint16_t key_press_cnt = 0; // 按键按下标志位
@@ -441,6 +470,7 @@ void key_Proc(void)
 			ctrState.SMFlag = Init;
 			ctrState.ui = UI_PARAM;
 			ctrState.pwm_output_flag = 0;
+			ctrState.run_flag = RUN_MODE_STOP;
 
 		}
 		
@@ -564,16 +594,15 @@ void key_Proc(void)
 		}
 		else if(ctrState.ui == UI_PARAM)
 		{
-			// timer_enable(TIMER0);
-			ctr_pwm_ch(1);
-			ctr_pwm_chn(1);
+			show_direct = !show_direct;
+			OLED_ShowDirectInit(show_direct);
 		}
 	}
 	else if(key_down == 5)
 	{
 		// 旋转编码器按下事件
 		ctrState.run_flag = !ctrState.run_flag;
-		ctr_pwm_chn(1);
+		
 		if(ctrState.run_flag == RUN_MODE_STOP)
 		{
 			ctrState.SMFlag = Wait;	

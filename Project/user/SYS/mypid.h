@@ -37,10 +37,11 @@ extern FloatPID pid_CC_Buck;
 extern FloatPID pid_CV_Buck;
 extern FloatPID pid_CV_Boost;
 extern FloatPID pid_CC_Boost;
+extern FloatPID pid_iL;
 
 void my_Pid_Init(void);//主要调用的函数
 
-
+void PID_Param_Reset(void);
 // 初始化PID控制器
 void PID_Init(FloatPID* pid, 
               float kp, float ki, float kd,

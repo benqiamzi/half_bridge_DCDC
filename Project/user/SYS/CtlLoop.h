@@ -6,6 +6,7 @@
 #define PERIOD 3000
 
 #define MAX_DUTY 2700
+#define BOOST_MAX_DUTY 2500
 #define MIN_DUTY 100
 
 

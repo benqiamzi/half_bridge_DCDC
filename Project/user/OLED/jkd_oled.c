@@ -349,23 +349,10 @@ void OLED_WriteData(uint8_t *Data, uint8_t Count)
 
 /*硬件配置*********************/
 
-/**
-  * 函    数：OLED初始化
-  * 参    数：无
-  * 返 回 值：无
-  * 说    明：使用前，需要调用此初始化函数
-  */
-void OLED_Init(void)
+void OLED_ShowDirectInit(uint8_t sel)
 {
-	OLED_gpioInit();
-	delay_1ms(100);    // 等待稳定
-    // 硬件复位
-    OLED_W_RES(0);     // 拉低RES复位
-    delay_1ms(20);     // 保持20ms
-    OLED_W_RES(1);     // 释放复位
-    delay_1ms(20);    // 等待稳定
-	
-	
+	const uint8_t data[4] = {0xA1, 0xA0,0xC8,0xC0};
+
 	/*写入一系列的命令，对OLED进行初始化配置*/
 	OLED_WriteCommand(0xAE);	//设置显示开启/关闭，0xAE关闭，0xAF开启
 	
@@ -380,9 +367,9 @@ void OLED_Init(void)
 	
 	OLED_WriteCommand(0x40);	//设置显示开始行，0x40~0x7F
 	
-	OLED_WriteCommand(0xA1);	//设置左右方向，0xA1正常，0xA0左右反置
+	OLED_WriteCommand(data[sel]);	//设置左右方向，0xA1正常，0xA0左右反置
 	
-	OLED_WriteCommand(0xC8);	//设置上下方向，0xC8正常，0xC0上下反置
+	OLED_WriteCommand(data[sel+2]);	//设置上下方向，0xC8正常，0xC0上下反置
 
 	OLED_WriteCommand(0xDA);	//设置COM引脚硬件配置
 	OLED_WriteCommand(0x12);
@@ -407,6 +394,27 @@ void OLED_Init(void)
 	
 	OLED_Clear();				//清空显存数组
 	OLED_Update();				//更新显示，清屏，防止初始化后未显示内容时花屏
+
+}
+
+/**
+  * 函    数：OLED初始化
+  * 参    数：无
+  * 返 回 值：无
+  * 说    明：使用前，需要调用此初始化函数
+  */
+void OLED_Init(void)
+{
+	OLED_gpioInit();
+	delay_1ms(100);    // 等待稳定
+    // 硬件复位
+    OLED_W_RES(0);     // 拉低RES复位
+    delay_1ms(20);     // 保持20ms
+    OLED_W_RES(1);     // 释放复位
+    delay_1ms(20);    // 等待稳定
+	
+	
+	OLED_ShowDirectInit(0);
 }
 
 /**

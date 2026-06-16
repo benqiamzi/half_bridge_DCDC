@@ -104,6 +104,7 @@ CCMRAM uint8_t VoutSwOVP(protection_hadle_t *protect, uint8_t run_flag, uint16_t
 					ctr_pwm_stop();
 					protect_handle.Vout_ovp_flag = 1;
 					ctrState.SMFlag = Err;
+					ctrState.run_flag = RUN_MODE_STOP;
 
 					return 2;
 				}

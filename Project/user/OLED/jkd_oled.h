@@ -23,6 +23,7 @@
 
 /*初始化函数*/
 void OLED_Init(void);
+void OLED_ShowDirectInit(uint8_t sel);
 
 /*更新函数*/
 void OLED_Update(void);

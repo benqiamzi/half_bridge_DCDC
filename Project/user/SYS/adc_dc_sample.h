@@ -14,18 +14,19 @@ typedef struct
 	float Vy_f32;
 	float Ix_f32;
 	float Iy_f32;
-	float Il_f32;
+	float iL_f32;
 	
     int16_t Vx_q15;     // X侧端电压
     int16_t Ix_q15;     // X侧端电流
     int16_t Vy_q15;     // Y侧端电压
     int16_t Iy_q15;     // Y侧端电流
-	int16_t Il_q15;     // 电感电流
+	int16_t iL_q15;     // 电感电流
 
     uint16_t Vx_raw;     // X侧端电压原始值
     uint16_t Ix_raw;     // X侧端电流原始值
     uint16_t Vy_raw;     // Y侧端电压原始值
     uint16_t Iy_raw;     // Y侧端电流原始值
+    uint16_t iL_raw;     // Y侧端电流原始值
 
     float k_vx_a;
     float k_vx_b;
