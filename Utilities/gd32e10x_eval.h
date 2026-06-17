@@ -45,11 +45,14 @@ OF SUCH DAMAGE.
 #define BUCK_PWM_HIGH_PIN         GPIO_PIN_8      /* TIMER0_CH0 */
 #define BUCK_PWM_LOW_PORT         GPIOB
 #define BUCK_PWM_LOW_PIN          GPIO_PIN_13     /* TIMER0_CH0N */
+
+#define ADC_CH_NUM             5
 #define VOLT_IY_PIN				GPIO_PIN_0
 #define VOLT_VY_PIN				GPIO_PIN_1
 #define VOLT_IL_PIN				GPIO_PIN_2
 #define VOLT_VX_PIN				GPIO_PIN_3
 #define VOLT_IX_PIN				GPIO_PIN_6
+#define VOLT_REF_PIN				GPIO_PIN_4
 
 #define KEY1_PIN                        GPIO_PIN_1
 #define KEY1_PORT                        GPIOB
@@ -78,7 +81,7 @@ OF SUCH DAMAGE.
 #define BEEP_GPIO_PORT                   GPIOB
 #define BEEP_PIN                           GPIO_PIN_9
 
-extern volatile uint16_t adc_value[5];
+extern volatile uint16_t adc_value[ADC_CH_NUM];
 
      
 void peripheral_config(void);

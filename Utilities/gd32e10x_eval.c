@@ -2,7 +2,7 @@
 #include "gd32e10x_eval.h"
 #include "systick.h"
 
-volatile uint16_t adc_value[5];
+volatile uint16_t adc_value[ADC_CH_NUM];
 
 
 /* 函数声明 */
@@ -49,6 +49,8 @@ void gpio_config(void)
     /* ADC 采样引脚 */
 	gpio_init(GPIOA, GPIO_MODE_AIN, GPIO_OSPEED_MAX, \
 				VOLT_VY_PIN|VOLT_IY_PIN|VOLT_IL_PIN|VOLT_VX_PIN|VOLT_IX_PIN);
+    
+    gpio_init(GPIOA, GPIO_MODE_AIN, GPIO_OSPEED_MAX,VOLT_REF_PIN);
    
     /* LED 引脚 */
     gpio_init(LED_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, LED1_PIN | LED2_PIN | LED3_PIN);
@@ -324,7 +326,7 @@ void dma_config(void)
     dma_data_parameter.periph_width = DMA_PERIPHERAL_WIDTH_16BIT;
     dma_data_parameter.memory_width = DMA_MEMORY_WIDTH_16BIT;  
     dma_data_parameter.direction = DMA_PERIPHERAL_TO_MEMORY;
-    dma_data_parameter.number = 5;
+    dma_data_parameter.number = ADC_CH_NUM;
     dma_data_parameter.priority = DMA_PRIORITY_HIGH;
     dma_init(DMA0, DMA_CH0, &dma_data_parameter);
 
@@ -354,7 +356,7 @@ void adc0_config(void)
     adc_data_alignment_config(ADC0, ADC_DATAALIGN_RIGHT);
     
     /* ADC channel length config */
-    adc_channel_length_config(ADC0, ADC_REGULAR_CHANNEL, 5);
+    adc_channel_length_config(ADC0, ADC_REGULAR_CHANNEL, ADC_CH_NUM);
     /* ADC regular channel config */
 	//采样顺序：IL、IY、IX、VY、VX
     adc_regular_channel_config(ADC0, 0, ADC_CHANNEL_2, ADC_SAMPLETIME_7POINT5);

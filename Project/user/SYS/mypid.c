@@ -10,10 +10,10 @@ FloatPID pid_iL;
 void my_Pid_Init(void)
 {
 	PID_Init(&pid_CC_Buck, 10.0f, 400.0f, 0.001f, MIN_DUTY, MAX_DUTY, 0, MAX_DUTY, 0.95f);
-	PID_Init(&pid_CV_Buck, 5.0f, 60.0f, 0.001f, 0.0f, 6.0f, 0.0f, 6.0f, 0.98f);
+	PID_Init(&pid_CV_Buck, 5.0f, 50.0f, 0.001f, 0.0f, 6.0f, 0.0f, 6.0f, 0.98f);
 
 	PID_Init(&pid_CC_Boost, 10.0f, 400.0f, 0.001f, MIN_DUTY, MAX_DUTY, 0, MAX_DUTY, 0.95f);
-	PID_Init(&pid_CV_Boost, 1.0f, 15.0f, 0.001f, 0.0f, 6.0f, 0.0f, 6.0f, 0.98f);
+	PID_Init(&pid_CV_Boost, 1, 20, 0.001f, 0.0f, 6.0f, 0.0f, 6.0f, 0.98f);
     // PID_Init(&pid_CV_Boost, 4.0f, 50.0f, 0.001f,MIN_DUTY, MAX_DUTY,MIN_DUTY, MAX_DUTY,0.98f);
     PID_Init(&pid_iL, 10, 200, 0.001f, MIN_DUTY, MAX_DUTY, 0, MAX_DUTY, 0.98f);
 }

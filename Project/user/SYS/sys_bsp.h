@@ -28,6 +28,7 @@
 #include "cdc_acm_core.h"
 #include <string.h>
 #include "function.h"
+#include "encoder.h"
 
 
 

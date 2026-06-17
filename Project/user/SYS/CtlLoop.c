@@ -4,6 +4,7 @@
 //PA11->TB2 LB2
 #include "sys_bsp.h"
 #include "CtlLoop.h"
+#include "protection.h"
 
 PWM_VALUE_t pwm_value ={
 	.Q1Duty = MIN_DUTY,
@@ -258,37 +259,46 @@ void DMA0_Channel0_IRQHandler(void)
         my_adc_sample.Ix_raw =  adc_value[2];
 		my_adc_sample.Iy_raw =  adc_value[1];
 
+
         my_adc_sample.Vy_raw = adc_value[3];
 		my_adc_sample.Vx_raw = adc_value[4];
 
-		// 计算实际两端口电压参数
-		my_adc_sample.Vy_f32 = my_adc_sample.Vy_raw*my_ctrvalue.Gv_re;
-		my_adc_sample.Vx_f32 = my_adc_sample.Vx_raw*my_ctrvalue.Gv_re;
+			/* ---- 浮点换算（保护函数全部使用 float 进行比较） ---- */
+		my_adc_sample.Vy_f32 = (float)my_adc_sample.Vy_raw * my_ctrvalue.Gv_re;
+		my_adc_sample.Vx_f32 = (float)my_adc_sample.Vx_raw * my_ctrvalue.Gv_re;
 
-		// 计算实际两端口电流参数
-		float currValue = ((my_adc_sample.Ix_raw- my_ctrvalue.offset)>0)?\
-			(my_adc_sample.Ix_raw- my_ctrvalue.offset):(my_ctrvalue.offset-my_adc_sample.Ix_raw);
-		my_adc_sample.Ix_f32 = currValue*my_ctrvalue.Gi_re;
+		float _iy = ((my_adc_sample.Iy_raw > my_ctrvalue.offset) ?
+		              (float)(my_adc_sample.Iy_raw - my_ctrvalue.offset) :
+		              (float)(my_ctrvalue.offset - my_adc_sample.Iy_raw));
+		my_adc_sample.Iy_f32 = _iy * my_ctrvalue.Gi_re;
 
-		currValue = ((my_adc_sample.Iy_raw- my_ctrvalue.offset)>0)?\
-				(my_adc_sample.Iy_raw- my_ctrvalue.offset):(my_ctrvalue.offset-my_adc_sample.Iy_raw);
-		my_adc_sample.Iy_f32 = currValue*my_ctrvalue.Gi_re;
+		float _ix = ((my_adc_sample.Ix_raw > my_ctrvalue.offset) ?
+		              (float)(my_adc_sample.Ix_raw - my_ctrvalue.offset) :
+		              (float)(my_ctrvalue.offset - my_adc_sample.Ix_raw));
+		my_adc_sample.Ix_f32 = _ix * my_ctrvalue.Gi_re;
+
 
 		// 计算电感电流
-		float iL_value = ((my_adc_sample.iL_raw- my_ctrvalue.offset)>0)?\
+		float _iL = ((my_adc_sample.iL_raw- my_ctrvalue.offset)>0)?\
 			(my_adc_sample.iL_raw- my_ctrvalue.offset):(my_ctrvalue.offset-my_adc_sample.iL_raw);
-		my_adc_sample.iL_f32 = iL_value*my_ctrvalue.Gi_re;
+		my_adc_sample.iL_f32 = _iL*my_ctrvalue.Gi_re;
 
 		// 保护函数
 		if(ctrState.ctr_mode == CTR_BUCK)
 		{
-			VoutSwOVP(&protect_handle, ctrState.pwm_output_flag, my_adc_sample.Vy_raw);
-			// LoppSwShort(&protect_handle, ctrState.pwm_output_flag, my_adc_sample.Vx_raw, my_adc_sample.Ix_raw-my_ctrvalue.offset);
+			protect_VoutOVP(&protect_handle, ctrState.run_flag, my_adc_sample.Vy_f32);
+			protect_VinOVP(&protect_handle,  ctrState.run_flag, my_adc_sample.Vx_f32);
+			protect_VoutOCP(&protect_handle, ctrState.run_flag, my_adc_sample.Iy_f32);
+			protect_ShortCircuit(&protect_handle, ctrState.run_flag,
+									my_adc_sample.Vy_f32, my_adc_sample.Iy_f32);
 		}
 		else
 		{
-			VoutSwOVP(&protect_handle, ctrState.pwm_output_flag, my_adc_sample.Vx_raw);
-			// LoppSwShort(&protect_handle, ctrState.pwm_output_flag, my_adc_sample.Vy_raw, my_ctrvalue.offset-my_adc_sample.Iy_raw);
+			protect_VoutOVP(&protect_handle, ctrState.run_flag, my_adc_sample.Vx_f32);
+			protect_VinOVP(&protect_handle,  ctrState.run_flag, my_adc_sample.Vy_f32);
+			protect_VoutOCP(&protect_handle, ctrState.run_flag, my_adc_sample.Ix_f32);
+			protect_ShortCircuit(&protect_handle, ctrState.run_flag,
+									my_adc_sample.Vx_f32, my_adc_sample.Ix_f32);
 		}
 		
 		if(ctrState.pwm_output_flag == 1)

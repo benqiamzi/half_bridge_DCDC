@@ -18,14 +18,14 @@ void cdc_send_data(const uint8_t *buf, uint32_t len)
     }
 }
 
-char str[50] = {0};
+char tx_buf[50] = {0};
 
 uint16_t curr_cnt = 0;
 uint16_t volt_cnt = 0;
 
 uint8_t param_set_idx = 0;
 const float param_set_step[] = {0.1f, 0.2f, 0.5f, 1.0f, 2.0f};
-const float vol_range_x[] = {15.0f, 24.0f};
+const float vol_range_x[] = {15.0f, 27.0f};
 const float vol_range_y[] = {5.0f, 16.0f};
 const float cur_range_x[] = {0.0f, 2.5f};
 const float cur_range_y[] = {0.0f, 5.0f};
@@ -34,6 +34,7 @@ void oled_show(void);
 void key_Proc(void);
 void led_Proc(void);
 void fsm_Proc(void);
+void encoder_Proc(void);
 
 CtrState_t ctrState = {
 	.ui = UI_PARAM,
@@ -48,6 +49,7 @@ CtrState_t ctrState = {
 
 void my_sys_init(void)
 {
+	encoder_init();
 	ctr_pwm_ch(0);
 	ctr_pwm_chn(0);
 	ctr_pwm_stop();
@@ -134,7 +136,7 @@ void fsm_Proc(void)
 CCMRAM void PWM_Rise(void)
 {
 	const static uint8_t step = 30;
-	const static uint8_t boost_step = 100;
+	const static uint8_t boost_step = 5;
 	static  uint16_t	Q1Cnt=0,Q2Cnt=0;//5mS计数器，PWM软起的计时器
 
 	switch(ctrState.STState)
@@ -234,7 +236,6 @@ CCMRAM void PWM_Rise(void)
 					Q2Cnt=0;//主状态机跳转至正常运行运行状态
 				}
 			}
-
 			
 			break;
 		}
@@ -250,6 +251,7 @@ void task_list(void)
 	oled_show();
 	// fsm_Proc();
 //	led_Proc();
+	// encoder_Proc();	
 	
 }
 
@@ -274,6 +276,9 @@ CCMRAM void oled_show(void)
 	
 	oled_tick = uwTick;
 	adc_disp();
+
+	sprintf(tx_buf, "cnt = %d\n", encoder_get_count());
+	cdc_send_data(tx_buf, strlen(tx_buf));
 
 	switch(ctrState.ui)
 	{
@@ -328,12 +333,12 @@ CCMRAM void oled_show(void)
 				if(ctrState.out_mode == OUT_CV)
 				{
 					OLED_ShowString(out_mode_num*8,Line0," CV ",OLED_8X16);
-					OLED_Printf(0,Line3, OLED_8X16, "Vset:%0.3fV  ", my_ctrvalue.Vyset_f32);
+					OLED_Printf(0,Line3, OLED_8X16, "Vset:%0.1fV  ", my_ctrvalue.Vyset_f32);
 				}
 				else if(ctrState.out_mode == OUT_CC)
 				{
 					OLED_ShowString(out_mode_num*8,Line0," CC ",OLED_8X16);
-					OLED_Printf(0,Line3, OLED_8X16, "Iset:%0.3fA  ", my_ctrvalue.Iyset_f32);
+					OLED_Printf(0,Line3, OLED_8X16, "Iset:%0.1fA  ", my_ctrvalue.Iyset_f32);
 				}
 			}
 			else if(ctrState.ctr_mode == CTR_BOOST)
@@ -344,12 +349,12 @@ CCMRAM void oled_show(void)
 				if(ctrState.out_mode == OUT_CV)
 				{
 					OLED_ShowString(out_mode_num*8,Line0," CV ",OLED_8X16);
-					OLED_Printf(0,Line3, OLED_8X16, "Vset:%0.3fV  ", my_ctrvalue.Vxset_f32);
+					OLED_Printf(0,Line3, OLED_8X16, "Vset:%0.1fV  ", my_ctrvalue.Vxset_f32);
 				}
 				else if(ctrState.out_mode == OUT_CC)
 				{
 					OLED_ShowString(out_mode_num*8,Line0," CC ",OLED_8X16);
-					OLED_Printf(0,Line3, OLED_8X16, "Iset:%0.3fA  ", my_ctrvalue.Ixset_f32);
+					OLED_Printf(0,Line3, OLED_8X16, "Iset:%0.1fA  ", my_ctrvalue.Ixset_f32);
 				}
 
 			}
@@ -497,6 +502,8 @@ void key_Proc(void)
 			{
 				param_set_idx = (param_set_idx + 1) % 3;
 			}
+
+
 		}
 	}
 	// 输出模式切换
@@ -602,7 +609,7 @@ void key_Proc(void)
 	{
 		// 旋转编码器按下事件
 		ctrState.run_flag = !ctrState.run_flag;
-		
+
 		if(ctrState.run_flag == RUN_MODE_STOP)
 		{
 			ctrState.SMFlag = Wait;	
@@ -613,6 +620,58 @@ void key_Proc(void)
 		
 }
 
+uint32_t encoder_tick = 0;
+void encoder_Proc(void)
+{
+	if(uwTick - encoder_tick < 200)
+		return;
+	
+	encoder_tick = uwTick;
+	static int32_t last_cnt = 0;
+	int32_t cnt = encoder_get_count();
+
+	if(ctrState.ui == UI_SET)
+	{
+		if(ctrState.ctr_mode == CTR_BUCK)
+		{
+			if(ctrState.out_mode == OUT_CV)
+			{
+				my_ctrvalue.Vyset_f32 = 0.1f*cnt;
+				if(my_ctrvalue.Vyset_f32 > vol_range_y[1])
+					my_ctrvalue.Vyset_f32 = vol_range_y[1];
+				loop_set_vol_y(my_ctrvalue.Vyset_f32);
+			}
+			else if(ctrState.out_mode == OUT_CC)
+			{
+				my_ctrvalue.Iyset_f32 = cnt*0.1f;
+				if(my_ctrvalue.Iyset_f32 > cur_range_y[1])
+					my_ctrvalue.Iyset_f32 = cur_range_y[1];
+				loop_set_cur_y(my_ctrvalue.Iyset_f32);
+			}
+			
+		}
+		else if(ctrState.ctr_mode == CTR_BOOST)
+		{
+			if(ctrState.out_mode == OUT_CV)
+			{
+				my_ctrvalue.Vxset_f32 = cnt*0.1f;
+				if(my_ctrvalue.Vxset_f32 > vol_range_x[1])
+					my_ctrvalue.Vxset_f32 = vol_range_x[1];
+				loop_set_vol_x(my_ctrvalue.Vxset_f32);
+			}
+			else if(ctrState.out_mode == OUT_CC)
+			{
+				my_ctrvalue.Ixset_f32 = cnt*0.1f;
+				if(my_ctrvalue.Ixset_f32 > cur_range_x[1])
+					my_ctrvalue.Ixset_f32 = cur_range_x[1];
+				loop_set_cur_x(my_ctrvalue.Ixset_f32);
+			}
+		}
+	}
+	last_cnt = cnt;
+
+
+}
 
 
 
