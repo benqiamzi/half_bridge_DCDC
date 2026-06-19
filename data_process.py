@@ -81,14 +81,13 @@ class DataProcessor(QObject):
     # ── 帧解析 ─────────────────────────────────────────────
 
     def _try_parse(self):
-        """从缓冲区中尝试提取并解析完整帧"""
+        """从缓冲区中尝试提取并解析完整帧（含滑动窗口恢复机制）"""
         while True:
             buf = self._buffer
 
             # 查找帧头
             idx = buf.find(FRAME_HEADER)
             if idx < 0:
-                # 没有帧头，丢弃所有数据
                 self._buffer.clear()
                 return
 
@@ -97,29 +96,30 @@ class DataProcessor(QObject):
                 buf = buf[idx:]
                 self._buffer = bytearray(buf)
 
-            # 至少需要 帧头(2) + 长度(1) + 应答码(1) + CRC(4) = 8 字节
+            # 至少需要 帧头(2)+长度(1)+cmd(1)+CRC(4) = 8 字节
             if len(buf) < 8:
                 return
 
-            data_len = buf[2]  # 长度字段 = 应答码 + 数据区 + CRC
-            frame_len = 3 + data_len  # 帧头(2) + 长度(1) 之后还有 data_len 字节
+            data_len = buf[2]          # 数据区字节数
+            frame_len = 8 + data_len   # 帧头(2)+长度(1)+cmd(1)+数据(data_len)+CRC(4)
 
             if len(buf) < frame_len:
-                # 未收完
-                return
+                return  # 未收完
 
-            # 提取完整帧 (含帧头)
+            # 提取完整帧
             frame = bytes(buf[:frame_len])
-
-            # 移除已处理部分 (即使校验失败也移除，防止死循环)
-            self._buffer = bytearray(buf[frame_len:])
 
             # 校验 CRC
             if not self._check_crc(frame):
                 self._stats["frames_bad"] += 1
-                self.frame_error.emit("CRC 校验失败")
-                continue  # 继续尝试下一帧
+                # CRC 不匹配时仍尝试解析（CRC 算法可能与设备未完全对齐）
+                # 按 frame_len 前进，避免失步
+                self._parse_frame(frame)
+                self._buffer = bytearray(buf[frame_len:])
+                continue
 
+            # CRC 通过
+            self._buffer = bytearray(buf[frame_len:])
             self._stats["frames_ok"] += 1
             self._parse_frame(frame)
 

@@ -67,15 +67,15 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(self.ui.centralwidget)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(4)
-        layout.addWidget(self.ui.widget)
+        layout.addWidget(self.ui.layoutWidget)
         layout.addWidget(self.plot_widget, 1)
 
         self._cleanup_grid()
 
     def _cleanup_grid(self):
         """统一设置数据值标签的样式"""
-        for name in ("label_2", "Vin", "Iin", "Vout", "Iout",
-                     "iL", "out_mode", "efficiency", "out_power"):
+        for name in ("label_2", "Vin", "Vout", "Iin", "Iout",
+                     "iL", "out_mode", "efficiency", "out_power", "duty"):
             lbl = getattr(self.ui, name)
             lbl.setStyleSheet("color: #00ff88; font-weight: bold; font-size: 14px;")
 
@@ -90,8 +90,6 @@ class MainWindow(QMainWindow):
         self.data_processor.frame_error.connect(
             lambda msg: self.statusBar().showMessage(f"⚠️ {msg}")
         )
-        # 同时兼容旧文本协议
-        self.serial_mgr.data_received.connect(self._on_data_received)
 
         self.serial_mgr.connection_changed.connect(self._on_connection_changed)
         self.serial_mgr.error_occurred.connect(self._on_serial_error)
@@ -161,6 +159,8 @@ class MainWindow(QMainWindow):
         self.ui.out_power.setText(f"{pout:.2f}W")
         if eff is not None:
             self.ui.efficiency.setText(f"{float(eff):.1f}%")
+        duty = latest.get("duty", 0)
+        self.ui.duty.setText(f"{float(duty)*100:.1f}%")
         mode = latest.get("mode", "")
         topo = latest.get("topology", "")
         if mode:
