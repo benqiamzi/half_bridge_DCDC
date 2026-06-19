@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QWidget" name="layoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>10</y>
+      <width>801</width>
+      <height>210</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>端口：</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="comboBox"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_2">
+         <property name="text">
+          <string>刷新</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton">
+         <property name="text">
+          <string>开启串口</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="open_set_btn">
+         <property name="text">
+          <string>打开设置界面</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="5" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="efficiency">
+         <property name="text">
+          <string>95%</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="out_mode">
+         <property name="text">
+          <string>CV</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="Iin">
+         <property name="text">
+          <string>0.000A</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>输出模式：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>输入电流：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_16">
+         <property name="text">
+          <string>效率：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>输入电压：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>输出电流：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>BUCK</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="Vin">
+         <property name="text">
+          <string>0.000V</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_18">
+         <property name="text">
+          <string>输出功率：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>输出电压：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="3" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="Iout">
+         <property name="text">
+          <string>0.000A</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_2"/>
+       </item>
+       <item row="3" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="Vout">
+         <property name="text">
+          <string>0.000V</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="iL">
+         <property name="text">
+          <string>0.000A</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>电感电流：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="3" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="out_power">
+         <property name="text">
+          <string>0.0W</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_13">
+         <property name="text">
+          <string>拓扑：</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
