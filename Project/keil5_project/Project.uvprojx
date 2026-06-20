@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER,GD32E10X,GD32E103V_EVAL, __FPU_USED=1, __FPU_PRESENT=1</Define>
               <Undefine></Undefine>
-              <IncludePath>..\;..\..\Firmware\CMSIS;..\..\Firmware\CMSIS\GD\GD32E10x\Include;..\..\Firmware\GD32E10x_standard_peripheral\Include;..\..\Utilities;..\user\OLED;..\..\Firmware\GD32E10x_usbfs_library\driver\Include;..\..\Firmware\GD32E10x_usbfs_library\device\core\Include;..\..\Firmware\GD32E10x_usbfs_library\device\class\cdc\Include;..\..\Firmware\GD32E10x_usbfs_library\ustd\class\cdc;..\..\Firmware\GD32E10x_usbfs_library\ustd\common;..\user\SYS;..\user\ENCODER</IncludePath>
+              <IncludePath>..\;..\..\Firmware\CMSIS;..\..\Firmware\CMSIS\GD\GD32E10x\Include;..\..\Firmware\GD32E10x_standard_peripheral\Include;..\..\Utilities;..\user\OLED;..\..\Firmware\GD32E10x_usbfs_library\driver\Include;..\..\Firmware\GD32E10x_usbfs_library\device\core\Include;..\..\Firmware\GD32E10x_usbfs_library\device\class\cdc\Include;..\..\Firmware\GD32E10x_usbfs_library\ustd\class\cdc;..\..\Firmware\GD32E10x_usbfs_library\ustd\common;..\user\SYS;..\user\ENCODER;..\user\USB_PRINT</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -603,6 +603,11 @@
               <FileName>encoder.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\user\ENCODER\encoder.c</FilePath>
+            </File>
+            <File>
+              <FileName>usb_print.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user\USB_PRINT\usb_print.c</FilePath>
             </File>
           </Files>
         </Group>

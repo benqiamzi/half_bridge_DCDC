@@ -35,6 +35,7 @@
 ".\output\protection.o"
 ".\output\mypid.o"
 ".\output\encoder.o"
+".\output\usb_print.o"
 ".\output\usbd_core.o"
 ".\output\usbd_enum.o"
 ".\output\usbd_transc.o"

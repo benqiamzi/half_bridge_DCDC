@@ -15,7 +15,7 @@ PWM_VALUE_t pwm_value ={
 
 #define DEADTIME 400
 
-CtlValue_t my_ctrvalue = {
+CtlValue_t ctr_value = {
 	.k_vy_a = 1.0015f,
 	.k_vy_b = 0.0348f,
 	.k_vx_a = 1.0000f,
@@ -25,33 +25,38 @@ CtlValue_t my_ctrvalue = {
 
 };
 
+
+
+
+
+
 void CtlValue_Init(void)
 {
-	my_ctrvalue.Vyset_f32 = 12.0f;
-	my_ctrvalue.Iyset_f32 = 0.5f;
+	ctr_value.Vyset_f32 = 12.0f;
+	ctr_value.Iyset_f32 = 0.5f;
 
-	my_ctrvalue.Vxset_f32 = 24.0f;
-	my_ctrvalue.Ixset_f32 = 0.5f;
+	ctr_value.Vxset_f32 = 24.0f;
+	ctr_value.Ixset_f32 = 0.5f;
 	
-	my_ctrvalue.Ri_sample = 10;
+	ctr_value.Ri_sample = 10;
 	
 
 
-	my_ctrvalue.offset = 2048;
-	my_ctrvalue.Gv = (4095.0f/3.3f)/(13.0f/1.0f);//实际电压/数字量
-	my_ctrvalue.Gv_re = 1.0f/my_ctrvalue.Gv;
+	ctr_value.offset = 2048;
+	ctr_value.Gv = (4095.0f/3.3f)/(13.0f/1.0f);//实际电压/数字量
+	ctr_value.Gv_re = 1.0f/ctr_value.Gv;
 	
-	my_ctrvalue.Gi_re = 3.3f/4095/(33.0f/1.0f)/my_ctrvalue.Ri_sample*1000.0f;
-	my_ctrvalue.Gi = 1.0f/my_ctrvalue.Gi_re;	 // 电流环增益
+	ctr_value.Gi_re = 3.3f/4095/(33.0f/1.0f)/ctr_value.Ri_sample*1000.0f;
+	ctr_value.Gi = 1.0f/ctr_value.Gi_re;	 // 电流环增益
 	
 	
-	my_ctrvalue.Vyset_q15 = (my_ctrvalue.Vyset_f32*my_ctrvalue.k_vy_a+my_ctrvalue.k_vy_b) * my_ctrvalue.Gv;
-	my_ctrvalue.Iyset_q15 = (my_ctrvalue.Iyset_f32*my_ctrvalue.k_iy_a+my_ctrvalue.k_iy_b) \
-				* my_ctrvalue.Gi+my_ctrvalue.offset;
+	ctr_value.Vyset_q15 = (ctr_value.Vyset_f32*ctr_value.k_vy_a+ctr_value.k_vy_b) * ctr_value.Gv;
+	ctr_value.Iyset_q15 = (ctr_value.Iyset_f32*ctr_value.k_iy_a+ctr_value.k_iy_b) \
+				* ctr_value.Gi+ctr_value.offset;
 	
-	my_ctrvalue.Vxset_q15 = (my_ctrvalue.Vxset_f32*my_ctrvalue.k_vx_a+my_ctrvalue.k_vx_b) * my_ctrvalue.Gv;
-	my_ctrvalue.Ixset_q15 = my_ctrvalue.offset - (my_ctrvalue.Ixset_f32) \
-				* my_ctrvalue.Gi;
+	ctr_value.Vxset_q15 = (ctr_value.Vxset_f32*ctr_value.k_vx_a+ctr_value.k_vx_b) * ctr_value.Gv;
+	ctr_value.Ixset_q15 = ctr_value.offset - (ctr_value.Ixset_f32) \
+				* ctr_value.Gi;
 }
 
 void BoostOpenLoopTest(void)
@@ -156,28 +161,28 @@ void ctr_pwm_stop(void)
 
 void loop_set_vol_x(float vol)
 {
-	my_ctrvalue.Vxset_f32 = vol;
-	my_ctrvalue.Vxset_q15 = (my_ctrvalue.Vxset_f32*my_ctrvalue.k_vx_a+my_ctrvalue.k_vx_b) * my_ctrvalue.Gv;
+	ctr_value.Vxset_f32 = vol;
+	ctr_value.Vxset_q15 = (ctr_value.Vxset_f32*ctr_value.k_vx_a+ctr_value.k_vx_b) * ctr_value.Gv;
 }
 
 void loop_set_vol_y(float vol)
 {
-	my_ctrvalue.Vyset_f32 = vol;
-	my_ctrvalue.Vyset_q15 = (my_ctrvalue.Vyset_f32*my_ctrvalue.k_vy_a+my_ctrvalue.k_vy_b) * my_ctrvalue.Gv;
+	ctr_value.Vyset_f32 = vol;
+	ctr_value.Vyset_q15 = (ctr_value.Vyset_f32*ctr_value.k_vy_a+ctr_value.k_vy_b) * ctr_value.Gv;
 }
 
 void loop_set_cur_x(float cur)
 {
-	my_ctrvalue.Ixset_f32 = cur;
-	my_ctrvalue.Ixset_q15 = my_ctrvalue.offset - (my_ctrvalue.Ixset_f32) \
-				* my_ctrvalue.Gi;
+	ctr_value.Ixset_f32 = cur;
+	ctr_value.Ixset_q15 = ctr_value.offset - (ctr_value.Ixset_f32) \
+				* ctr_value.Gi;
 }
 
 void loop_set_cur_y(float cur)
 {
-	my_ctrvalue.Iyset_f32 = cur;
-	my_ctrvalue.Iyset_q15 = (my_ctrvalue.Iyset_f32) \
-				* my_ctrvalue.Gi+my_ctrvalue.offset;
+	ctr_value.Iyset_f32 = cur;
+	ctr_value.Iyset_q15 = (ctr_value.Iyset_f32) \
+				* ctr_value.Gi+ctr_value.offset;
 }
 
 void LoopCtl(void)
@@ -190,7 +195,7 @@ void LoopCtl(void)
 		if(ctrState.out_mode == OUT_CV)
 		{
 
-			vol_loop = PID_Update(&pid_CV_Buck, my_ctrvalue.Vyset_f32, my_adc_sample.Vy_f32, 1.0f/40e3);
+			vol_loop = PID_Update(&pid_CV_Buck, ctr_value.Vyset_f32, my_adc_sample.Vy_f32, 1.0f/40e3);
 
 			tmp = PID_Update(&pid_iL, vol_loop, my_adc_sample.iL_f32, 1.0f/40e3);
 			
@@ -203,7 +208,7 @@ void LoopCtl(void)
 		else if(ctrState.out_mode == OUT_CC)
 		{
 
-			tmp = PID_Update(&pid_CC_Buck, my_ctrvalue.Iyset_f32, my_adc_sample.Iy_f32, 1.0f/40e3);
+			tmp = PID_Update(&pid_CC_Buck, ctr_value.Iyset_f32, my_adc_sample.Iy_f32, 1.0f/40e3);
 			pwm_value.Q1Duty = (uint16_t)tmp;
 				
 			duty_limit(&pwm_value, pwm_value.Q1Duty, CTR_BUCK);
@@ -217,7 +222,7 @@ void LoopCtl(void)
 		if(ctrState.out_mode == OUT_CV)
 		{
 			// 计算电压外环PID
-			vol_loop = PID_Update(&pid_CV_Boost, my_ctrvalue.Vxset_f32, my_adc_sample.Vx_f32, 1.0f/40e3);
+			vol_loop = PID_Update(&pid_CV_Boost, ctr_value.Vxset_f32, my_adc_sample.Vx_f32, 1.0f/40e3);
 
 			// 计算电流内环PID
 			tmp = PID_Update(&pid_iL, vol_loop,my_adc_sample.iL_f32, 1.0f/40e3);
@@ -231,7 +236,7 @@ void LoopCtl(void)
 		}
 		else if(ctrState.out_mode == OUT_CC)
 		{
-			tmp = PID_Update(&pid_CC_Boost, my_ctrvalue.Ixset_f32,my_adc_sample.Ix_f32, 1.0f/40e3);
+			tmp = PID_Update(&pid_CC_Boost, ctr_value.Ixset_f32,my_adc_sample.Ix_f32, 1.0f/40e3);
 			
 			pwm_value.Q2Duty = duty_limit(&pwm_value, (uint16_t)tmp, CTR_BOOST);
 
@@ -264,24 +269,24 @@ void DMA0_Channel0_IRQHandler(void)
 		my_adc_sample.Vx_raw = adc_value[4];
 
 			/* ---- 浮点换算（保护函数全部使用 float 进行比较） ---- */
-		my_adc_sample.Vy_f32 = (float)my_adc_sample.Vy_raw * my_ctrvalue.Gv_re;
-		my_adc_sample.Vx_f32 = (float)my_adc_sample.Vx_raw * my_ctrvalue.Gv_re;
+		my_adc_sample.Vy_f32 = (float)my_adc_sample.Vy_raw * ctr_value.Gv_re;
+		my_adc_sample.Vx_f32 = (float)my_adc_sample.Vx_raw * ctr_value.Gv_re;
 
-		float _iy = ((my_adc_sample.Iy_raw > my_ctrvalue.offset) ?
-		              (float)(my_adc_sample.Iy_raw - my_ctrvalue.offset) :
-		              (float)(my_ctrvalue.offset - my_adc_sample.Iy_raw));
-		my_adc_sample.Iy_f32 = _iy * my_ctrvalue.Gi_re;
+		float _iy = ((my_adc_sample.Iy_raw > ctr_value.offset) ?
+		              (float)(my_adc_sample.Iy_raw - ctr_value.offset) :
+		              (float)(ctr_value.offset - my_adc_sample.Iy_raw));
+		my_adc_sample.Iy_f32 = _iy * ctr_value.Gi_re;
 
-		float _ix = ((my_adc_sample.Ix_raw > my_ctrvalue.offset) ?
-		              (float)(my_adc_sample.Ix_raw - my_ctrvalue.offset) :
-		              (float)(my_ctrvalue.offset - my_adc_sample.Ix_raw));
-		my_adc_sample.Ix_f32 = _ix * my_ctrvalue.Gi_re;
+		float _ix = ((my_adc_sample.Ix_raw > ctr_value.offset) ?
+		              (float)(my_adc_sample.Ix_raw - ctr_value.offset) :
+		              (float)(ctr_value.offset - my_adc_sample.Ix_raw));
+		my_adc_sample.Ix_f32 = _ix * ctr_value.Gi_re;
 
 
 		// 计算电感电流
-		float _iL = ((my_adc_sample.iL_raw- my_ctrvalue.offset)>0)?\
-			(my_adc_sample.iL_raw- my_ctrvalue.offset):(my_ctrvalue.offset-my_adc_sample.iL_raw);
-		my_adc_sample.iL_f32 = _iL*my_ctrvalue.Gi_re;
+		float _iL = ((my_adc_sample.iL_raw- ctr_value.offset)>0)?\
+			(my_adc_sample.iL_raw- ctr_value.offset):(ctr_value.offset-my_adc_sample.iL_raw);
+		my_adc_sample.iL_f32 = _iL*ctr_value.Gi_re;
 
 		// 保护函数
 		if(ctrState.ctr_mode == CTR_BUCK)
@@ -306,6 +311,13 @@ void DMA0_Channel0_IRQHandler(void)
 			/* 先清标志再执行 LoopCtl，避免耗时处理期间新 FTF 到达后连带被清 */
         	LoopCtl();
 		}
+		// static uint8_t cnt = 0;
+		// cnt++;
+		// if(cnt == 4)
+		// {
+		// 	cnt = 0;
+			
+		// }
 
         gpio_bit_reset(GPIOA,GPIO_PIN_10);
 		dma_interrupt_flag_clear(DMA0, DMA_CH0, DMA_INT_FLAG_G);

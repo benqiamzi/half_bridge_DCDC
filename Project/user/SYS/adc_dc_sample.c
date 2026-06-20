@@ -106,22 +106,22 @@ void adc_disp(void)
 	//adc_filter();
 
 	//计算Ix电流
-	tmp = ((my_adc_sample.Ix_q15- my_ctrvalue.offset)>0)?\
-	(my_adc_sample.Ix_q15- my_ctrvalue.offset):(my_ctrvalue.offset-my_adc_sample.Ix_q15);
-	my_adc_sample.Ix_f32 = tmp*my_ctrvalue.Gi_re;
+	tmp = ((my_adc_sample.Ix_q15- ctr_value.offset)>0)?\
+	(my_adc_sample.Ix_q15- ctr_value.offset):(ctr_value.offset-my_adc_sample.Ix_q15);
+	my_adc_sample.Ix_f32 = tmp*ctr_value.Gi_re;
 	
 	//计算Iy电流
-	tmp = ((my_adc_sample.Iy_q15- my_ctrvalue.offset)>0)?\
-	(my_adc_sample.Iy_q15- my_ctrvalue.offset):(my_ctrvalue.offset-my_adc_sample.Iy_q15);
-	my_adc_sample.Iy_f32 = tmp*my_ctrvalue.Gi_re*my_adc_sample.k_iy_a+my_adc_sample.k_iy_b;
+	tmp = ((my_adc_sample.Iy_q15- ctr_value.offset)>0)?\
+	(my_adc_sample.Iy_q15- ctr_value.offset):(ctr_value.offset-my_adc_sample.Iy_q15);
+	my_adc_sample.Iy_f32 = tmp*ctr_value.Gi_re*my_adc_sample.k_iy_a+my_adc_sample.k_iy_b;
 
 	if(my_adc_sample.Iy_f32<-0.001f)
 	{
 		my_adc_sample.Iy_f32 = 0.00f;
 	}
 	
-	my_adc_sample.Vx_f32 = my_adc_sample.Vx_q15*my_ctrvalue.Gv_re;
-	my_adc_sample.Vy_f32 = my_adc_sample.Vy_q15*my_ctrvalue.Gv_re*my_adc_sample.k_vy_a+my_adc_sample.k_vy_b;
+	my_adc_sample.Vx_f32 = my_adc_sample.Vx_q15*ctr_value.Gv_re;
+	my_adc_sample.Vy_f32 = my_adc_sample.Vy_q15*ctr_value.Gv_re*my_adc_sample.k_vy_a+my_adc_sample.k_vy_b;
 	if(my_adc_sample.Vy_f32<-0.0001f)
 	{
 		my_adc_sample.Vy_f32 = 0.00f;
@@ -143,6 +143,6 @@ void adc_AutoGetOffset(void)
 		sum += adc_value[2];
 		//HAL_Delay(1);
 	}
-	my_ctrvalue.offset = sum/cnt;
+	ctr_value.offset = sum/cnt;
 }
 

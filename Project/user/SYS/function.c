@@ -3,20 +3,7 @@
 #include "protection.h"
 
 #define _DEBUG 
-usb_core_driver cdc_acm;
 
-void cdc_send_data(const uint8_t *buf, uint32_t len)
-{
-    usb_cdc_handler *cdc = (usb_cdc_handler *)cdc_acm.dev.class_data[CDC_COM_INTERFACE];
-
-    if ((cdc != NULL) && (len > 0) && (len <= USB_CDC_RX_LEN)) {
-        if (cdc_acm_check_ready(&cdc_acm) == 0) {
-            memcpy(cdc->data, buf, len);
-            cdc->receive_length = len;
-            cdc_acm_data_send(&cdc_acm);
-        }
-    }
-}
 
 char tx_buf[50] = {0};
 
@@ -47,6 +34,8 @@ CtrState_t ctrState = {
 	.openloop_flag = 0
 };
 
+
+extern usb_core_driver cdc_acm;
 void my_sys_init(void)
 {
 	encoder_init();
@@ -58,10 +47,11 @@ void my_sys_init(void)
 	usb_rcu_config();
 
     usb_timer_init();
-
-    usbd_init(&cdc_acm, &cdc_desc, &cdc_class);
-
+	
+	
     usb_intr_config();
+
+	usbd_init(&cdc_acm, &cdc_desc, &cdc_class);
 
 	OLED_Init();
 }
@@ -69,7 +59,15 @@ void my_sys_init(void)
 void TIMER5_IRQHandler(void)
 {
 	// gpio_bit_set(GPIOB,GPIO_PIN_11|GPIO_PIN_10);
-	fsm_Proc();	
+		static uint8_t cnt = 0;
+		cnt++;
+		if(cnt == 10)
+		{
+			cnt = 0;
+			fsm_Proc();	
+		}
+	
+	send_param_data();
 	// gpio_bit_reset(GPIOB,GPIO_PIN_11|GPIO_PIN_10);
 	timer_interrupt_flag_clear(TIMER5, TIMER_INT_UP);
 }
@@ -333,12 +331,12 @@ CCMRAM void oled_show(void)
 				if(ctrState.out_mode == OUT_CV)
 				{
 					OLED_ShowString(out_mode_num*8,Line0," CV ",OLED_8X16);
-					OLED_Printf(0,Line3, OLED_8X16, "Vset:%0.1fV  ", my_ctrvalue.Vyset_f32);
+					OLED_Printf(0,Line3, OLED_8X16, "Vset:%0.1fV  ", ctr_value.Vyset_f32);
 				}
 				else if(ctrState.out_mode == OUT_CC)
 				{
 					OLED_ShowString(out_mode_num*8,Line0," CC ",OLED_8X16);
-					OLED_Printf(0,Line3, OLED_8X16, "Iset:%0.1fA  ", my_ctrvalue.Iyset_f32);
+					OLED_Printf(0,Line3, OLED_8X16, "Iset:%0.1fA  ", ctr_value.Iyset_f32);
 				}
 			}
 			else if(ctrState.ctr_mode == CTR_BOOST)
@@ -349,12 +347,12 @@ CCMRAM void oled_show(void)
 				if(ctrState.out_mode == OUT_CV)
 				{
 					OLED_ShowString(out_mode_num*8,Line0," CV ",OLED_8X16);
-					OLED_Printf(0,Line3, OLED_8X16, "Vset:%0.1fV  ", my_ctrvalue.Vxset_f32);
+					OLED_Printf(0,Line3, OLED_8X16, "Vset:%0.1fV  ", ctr_value.Vxset_f32);
 				}
 				else if(ctrState.out_mode == OUT_CC)
 				{
 					OLED_ShowString(out_mode_num*8,Line0," CC ",OLED_8X16);
-					OLED_Printf(0,Line3, OLED_8X16, "Iset:%0.1fA  ", my_ctrvalue.Ixset_f32);
+					OLED_Printf(0,Line3, OLED_8X16, "Iset:%0.1fA  ", ctr_value.Ixset_f32);
 				}
 
 			}
@@ -522,17 +520,17 @@ void key_Proc(void)
 			{
 				if(ctrState.out_mode == OUT_CV)
 				{
-					my_ctrvalue.Vyset_f32 += param_set_step[param_set_idx];
-					if(my_ctrvalue.Vyset_f32 > vol_range_y[1])
-						my_ctrvalue.Vyset_f32 = vol_range_y[1];
-					loop_set_vol_y(my_ctrvalue.Vyset_f32);
+					ctr_value.Vyset_f32 += param_set_step[param_set_idx];
+					if(ctr_value.Vyset_f32 > vol_range_y[1])
+						ctr_value.Vyset_f32 = vol_range_y[1];
+					loop_set_vol_y(ctr_value.Vyset_f32);
 				}
 				else if(ctrState.out_mode == OUT_CC)
 				{
-					my_ctrvalue.Iyset_f32 += param_set_step[param_set_idx];
-					if(my_ctrvalue.Iyset_f32 > cur_range_y[1])
-						my_ctrvalue.Iyset_f32 = cur_range_y[1];
-					loop_set_cur_y(my_ctrvalue.Iyset_f32);
+					ctr_value.Iyset_f32 += param_set_step[param_set_idx];
+					if(ctr_value.Iyset_f32 > cur_range_y[1])
+						ctr_value.Iyset_f32 = cur_range_y[1];
+					loop_set_cur_y(ctr_value.Iyset_f32);
 				}
 				
 			}
@@ -540,17 +538,17 @@ void key_Proc(void)
 			{
 				if(ctrState.out_mode == OUT_CV)
 				{
-					my_ctrvalue.Vxset_f32 += param_set_step[param_set_idx];
-					if(my_ctrvalue.Vxset_f32 > vol_range_x[1])
-						my_ctrvalue.Vxset_f32 = vol_range_x[1];
-					loop_set_vol_x(my_ctrvalue.Vxset_f32);
+					ctr_value.Vxset_f32 += param_set_step[param_set_idx];
+					if(ctr_value.Vxset_f32 > vol_range_x[1])
+						ctr_value.Vxset_f32 = vol_range_x[1];
+					loop_set_vol_x(ctr_value.Vxset_f32);
 				}
 				else if(ctrState.out_mode == OUT_CC)
 				{
-					my_ctrvalue.Ixset_f32 += param_set_step[param_set_idx];
-					if(my_ctrvalue.Ixset_f32 > cur_range_x[1])
-						my_ctrvalue.Ixset_f32 = cur_range_x[1];
-					loop_set_cur_x(my_ctrvalue.Ixset_f32);
+					ctr_value.Ixset_f32 += param_set_step[param_set_idx];
+					if(ctr_value.Ixset_f32 > cur_range_x[1])
+						ctr_value.Ixset_f32 = cur_range_x[1];
+					loop_set_cur_x(ctr_value.Ixset_f32);
 				}
 			}
 		}
@@ -565,18 +563,18 @@ void key_Proc(void)
 			{
 				if(ctrState.out_mode == OUT_CV)
 				{
-					my_ctrvalue.Vyset_f32 -= param_set_step[param_set_idx];
-					if(my_ctrvalue.Vyset_f32 < vol_range_y[0])
-						my_ctrvalue.Vyset_f32 = vol_range_y[0];
-					loop_set_vol_y(my_ctrvalue.Vyset_f32);
+					ctr_value.Vyset_f32 -= param_set_step[param_set_idx];
+					if(ctr_value.Vyset_f32 < vol_range_y[0])
+						ctr_value.Vyset_f32 = vol_range_y[0];
+					loop_set_vol_y(ctr_value.Vyset_f32);
 				}
 				else if(ctrState.out_mode == OUT_CC)
 				{
-					my_ctrvalue.Iyset_f32 -= param_set_step[param_set_idx];
-					if(my_ctrvalue.Iyset_f32 < cur_range_y[0])
-						my_ctrvalue.Iyset_f32 = cur_range_y[0];
+					ctr_value.Iyset_f32 -= param_set_step[param_set_idx];
+					if(ctr_value.Iyset_f32 < cur_range_y[0])
+						ctr_value.Iyset_f32 = cur_range_y[0];
 
-					loop_set_cur_y(my_ctrvalue.Iyset_f32);
+					loop_set_cur_y(ctr_value.Iyset_f32);
 				}
 				
 			}
@@ -584,17 +582,17 @@ void key_Proc(void)
 			{
 				if(ctrState.out_mode == OUT_CV)
 				{
-					my_ctrvalue.Vxset_f32 -= param_set_step[param_set_idx];
-					if(my_ctrvalue.Vxset_f32 < vol_range_x[0])
-						my_ctrvalue.Vxset_f32 = vol_range_x[0];
-					loop_set_vol_x(my_ctrvalue.Vxset_f32);
+					ctr_value.Vxset_f32 -= param_set_step[param_set_idx];
+					if(ctr_value.Vxset_f32 < vol_range_x[0])
+						ctr_value.Vxset_f32 = vol_range_x[0];
+					loop_set_vol_x(ctr_value.Vxset_f32);
 				}
 				else if(ctrState.out_mode == OUT_CC)
 				{
-					my_ctrvalue.Ixset_f32 -= param_set_step[param_set_idx];
-					if(my_ctrvalue.Ixset_f32 < cur_range_x[0])
-						my_ctrvalue.Ixset_f32 = cur_range_x[0];
-					loop_set_cur_x(my_ctrvalue.Ixset_f32);
+					ctr_value.Ixset_f32 -= param_set_step[param_set_idx];
+					if(ctr_value.Ixset_f32 < cur_range_x[0])
+						ctr_value.Ixset_f32 = cur_range_x[0];
+					loop_set_cur_x(ctr_value.Ixset_f32);
 				}
 			}
 
@@ -636,17 +634,17 @@ void encoder_Proc(void)
 		{
 			if(ctrState.out_mode == OUT_CV)
 			{
-				my_ctrvalue.Vyset_f32 = 0.1f*cnt;
-				if(my_ctrvalue.Vyset_f32 > vol_range_y[1])
-					my_ctrvalue.Vyset_f32 = vol_range_y[1];
-				loop_set_vol_y(my_ctrvalue.Vyset_f32);
+				ctr_value.Vyset_f32 = 0.1f*cnt;
+				if(ctr_value.Vyset_f32 > vol_range_y[1])
+					ctr_value.Vyset_f32 = vol_range_y[1];
+				loop_set_vol_y(ctr_value.Vyset_f32);
 			}
 			else if(ctrState.out_mode == OUT_CC)
 			{
-				my_ctrvalue.Iyset_f32 = cnt*0.1f;
-				if(my_ctrvalue.Iyset_f32 > cur_range_y[1])
-					my_ctrvalue.Iyset_f32 = cur_range_y[1];
-				loop_set_cur_y(my_ctrvalue.Iyset_f32);
+				ctr_value.Iyset_f32 = cnt*0.1f;
+				if(ctr_value.Iyset_f32 > cur_range_y[1])
+					ctr_value.Iyset_f32 = cur_range_y[1];
+				loop_set_cur_y(ctr_value.Iyset_f32);
 			}
 			
 		}
@@ -654,17 +652,17 @@ void encoder_Proc(void)
 		{
 			if(ctrState.out_mode == OUT_CV)
 			{
-				my_ctrvalue.Vxset_f32 = cnt*0.1f;
-				if(my_ctrvalue.Vxset_f32 > vol_range_x[1])
-					my_ctrvalue.Vxset_f32 = vol_range_x[1];
-				loop_set_vol_x(my_ctrvalue.Vxset_f32);
+				ctr_value.Vxset_f32 = cnt*0.1f;
+				if(ctr_value.Vxset_f32 > vol_range_x[1])
+					ctr_value.Vxset_f32 = vol_range_x[1];
+				loop_set_vol_x(ctr_value.Vxset_f32);
 			}
 			else if(ctrState.out_mode == OUT_CC)
 			{
-				my_ctrvalue.Ixset_f32 = cnt*0.1f;
-				if(my_ctrvalue.Ixset_f32 > cur_range_x[1])
-					my_ctrvalue.Ixset_f32 = cur_range_x[1];
-				loop_set_cur_x(my_ctrvalue.Ixset_f32);
+				ctr_value.Ixset_f32 = cnt*0.1f;
+				if(ctr_value.Ixset_f32 > cur_range_x[1])
+					ctr_value.Ixset_f32 = cur_range_x[1];
+				loop_set_cur_x(ctr_value.Ixset_f32);
 			}
 		}
 	}

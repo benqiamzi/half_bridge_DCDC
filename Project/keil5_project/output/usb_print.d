@@ -1,4 +1,5 @@
-./output/main.o: ..\main.c \
+./output/usb_print.o: ..\user\USB_PRINT\usb_print.c \
+  ..\user\USB_PRINT\usb_print.h ..\user\SYS\sys_bsp.h \
   ..\..\Firmware\CMSIS\GD\GD32E10x\Include\gd32e10x.h \
   ..\..\Firmware\CMSIS\core_cm4.h ..\..\Firmware\CMSIS\core_cmInstr.h \
   ..\..\Firmware\CMSIS\core_cmFunc.h \
@@ -26,10 +27,10 @@
   ..\..\Firmware\GD32E10x_standard_peripheral\Include\gd32e10x_wwdgt.h \
   ..\..\Firmware\GD32E10x_standard_peripheral\Include\gd32e10x_misc.h \
   ..\..\Firmware\GD32E10x_standard_peripheral\Include\gd32e10x_exmc.h \
-  ..\systick.h ..\main.h ..\..\Utilities\gd32e10x_eval.h \
-  ..\user\OLED\jkd_oled.h ..\user\OLED\oledfont.h ..\user\SYS\sys_bsp.h \
-  ..\user\SYS\function.h ..\user\SYS\protection.h \
-  ..\user\SYS\adc_dc_sample.h ..\user\SYS\mypid.h ..\user\SYS\ctlloop.h \
+  ..\systick.h ..\..\Utilities\gd32e10x_eval.h ..\user\SYS\function.h \
+  ..\user\SYS\protection.h ..\user\SYS\adc_dc_sample.h \
+  ..\user\SYS\mypid.h ..\user\SYS\ctlloop.h ..\user\OLED\jkd_oled.h \
+  ..\user\OLED\oledfont.h \
   ..\..\Firmware\GD32E10x_usbfs_library\driver\Include\drv_usb_hw.h \
   ..\usb_conf.h \
   ..\..\Firmware\GD32E10x_usbfs_library\device\class\cdc\Include\cdc_acm_core.h \
@@ -41,4 +42,4 @@
   ..\..\Firmware\GD32E10x_usbfs_library\driver\Include\drv_usb_dev.h \
   ..\usbd_conf.h \
   ..\..\Firmware\GD32E10x_usbfs_library\ustd\class\cdc\usb_cdc.h \
-  ..\user\ENCODER\encoder.h ..\user\USB_PRINT\usb_print.h
+  ..\user\ENCODER\encoder.h

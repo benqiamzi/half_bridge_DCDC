@@ -52,7 +52,7 @@ typedef struct
 
 }PWM_VALUE_t;
 
-extern CtlValue_t my_ctrvalue;
+extern CtlValue_t ctr_value;
 extern PWM_VALUE_t pwm_value;
 
 void duty_change(uint16_t duty,uint8_t ch);

@@ -27,6 +27,8 @@ void gpio_config(void)
 	rcu_periph_clock_enable(RCU_ADC0);
 	rcu_adc_clock_config(RCU_CKADC_CKAPB2_DIV4);
 
+    rcu_periph_clock_enable(RCU_CRC);
+
     /* 测试功能引脚 */
     gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_10);
     gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_11);
@@ -79,7 +81,7 @@ void timer5_config(void)
     /* 1ms 定时器，定时器时钟 60MHz，预分频 60，计数频率 1MHz，ARR = 999 */
     timer_deinit(TIMER5);
     timer_struct_para_init(&timer_initpara);
-    timer_initpara.prescaler         = 59;
+    timer_initpara.prescaler         = 2;
     timer_initpara.alignedmode       = TIMER_COUNTER_EDGE;
     timer_initpara.counterdirection  = TIMER_COUNTER_UP;
     timer_initpara.period            = 3999;

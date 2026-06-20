@@ -29,6 +29,8 @@
 #include <string.h>
 #include "function.h"
 #include "encoder.h"
+#include "usb_print.h"
+#include "gd32e10x_crc.h"
 
 
 

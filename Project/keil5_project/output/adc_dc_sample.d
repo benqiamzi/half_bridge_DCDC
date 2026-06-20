@@ -42,4 +42,4 @@
   ..\..\Firmware\GD32E10x_usbfs_library\driver\Include\drv_usb_dev.h \
   ..\usbd_conf.h \
   ..\..\Firmware\GD32E10x_usbfs_library\ustd\class\cdc\usb_cdc.h \
-  ..\user\ENCODER\encoder.h
+  ..\user\ENCODER\encoder.h ..\user\USB_PRINT\usb_print.h
