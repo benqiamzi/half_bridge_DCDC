@@ -5,7 +5,8 @@
 
 #define SEND_DATA 0x81
 #define SEND_STATE 0x82
-#define SEND_ASK 0x83
+#define SEND_PROTECT 0x83
+#define SEND_ASK 0x84
 
 void send_param_data(void);
 

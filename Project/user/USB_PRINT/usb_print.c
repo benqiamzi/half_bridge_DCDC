@@ -80,16 +80,15 @@ void send_param_data(void)
 
 }
 
+// 状态数据位：
+//  7           6           5           4
+//  run_flag    ctr_mode    out_mode    
 void send_state_data(void)
 {
     memset()
     uint8_t i = 2;
-    send_data[i] = 1+12+4;
-    send_data[i+1] = SEND_DATA;
-
-    uint16_t tmp = my_adc_sample.Vx_f32*1000;
-    send_data[i+2] = tmp &0x00ff;
-    send_data[i+3] = tmp >>8;
+    send_data[i] = 1+1+4;
+    send_data[i+1] = SEND_STATE;
 
 
 }
