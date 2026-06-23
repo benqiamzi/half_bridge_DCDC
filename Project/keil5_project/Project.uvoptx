@@ -152,9 +152,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>634</LineNumber>
+          <LineNumber>68</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>204</Address>
+          <Address>134225348</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -163,23 +163,7 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>..\user\SYS\function.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\Project\../user/SYS/function.c\634</Expression>
-        </Bp>
-        <Bp>
-          <Number>1</Number>
-          <Type>0</Type>
-          <LineNumber>263</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134220298</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\user\SYS\CtlLoop.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\Project\../user/SYS/CtlLoop.c\263</Expression>
+          <Expression>\\Project\../user/SYS/function.c\68</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>

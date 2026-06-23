@@ -29,21 +29,11 @@ Project File Date:  06/19/2026
 Build target 'GD32E10X'
 Note: source file '..\..\Firmware\GD32E10x_usbfs_library\driver\Source\drv_usb_dev.c' - object file renamed from '.\output\drv_usb_dev.o' to '.\output\drv_usb_dev_1.o'.
 Note: source file '..\..\Firmware\GD32E10x_usbfs_library\device\class\cdc\Source\cdc_acm_core.c' - object file renamed from '.\output\cdc_acm_core.o' to '.\output\cdc_acm_core_1.o'.
-../user/SYS/function.c(279): warning: passing 'char[50]' to parameter of type 'const uint8_t *' (aka 'const unsigned char *') converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
-  279 |         cdc_send_data(tx_buf, strlen(tx_buf));
-      |                       ^~~~~~
-../user/USB_PRINT\usb_print.h(13): note: passing argument to parameter 'buf' here
-   13 | void cdc_send_data(const uint8_t *buf, uint32_t len);
-      |                                   ^
-../user/SYS/function.c(372): warning: label followed by a declaration is a C23 extension [-Wc23-extensions]
-  372 |                         char err_str[16] = {0};  // 数组初始化，全部清零（杜绝随机脏数据）
-      |                         ^
-2 warnings generated.
-compiling function.c...
+compiling mypid.c...
 linking...
-Program Size: Code=38836 RO-data=3468 RW-data=588 ZI-data=4668  
+Program Size: Code=39708 RO-data=3468 RW-data=600 ZI-data=4792  
 FromELF: creating hex file...
-".\output\Project.axf" - 0 Error(s), 2 Warning(s).
+".\output\Project.axf" - 0 Error(s), 0 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -66,7 +56,7 @@ Package Vendor: GigaDevice
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE@6.1.0
-Build Time Elapsed:  00:00:03
+Build Time Elapsed:  00:00:02
 </pre>
 </body>
 </html>

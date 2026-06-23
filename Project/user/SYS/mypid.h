@@ -38,6 +38,8 @@ extern FloatPID pid_CV_Buck;
 extern FloatPID pid_CV_Boost;
 extern FloatPID pid_CC_Boost;
 extern FloatPID pid_iL;
+extern FloatPID pid_CV_Buck_with_iL;
+extern FloatPID pid_CV_Boost_with_iL;
 
 void my_Pid_Init(void);//主要调用的函数
 

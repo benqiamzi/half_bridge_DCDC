@@ -55,8 +55,8 @@ void gpio_config(void)
     gpio_init(GPIOA, GPIO_MODE_AIN, GPIO_OSPEED_MAX,VOLT_REF_PIN);
    
     /* LED 引脚 */
-    gpio_init(LED_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, LED1_PIN | LED2_PIN | LED3_PIN);
-    gpio_bit_set(LED_PORT, LED1_PIN | LED2_PIN | LED3_PIN);   // 初始熄灭
+    gpio_init(LED_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, OCP_LED_PIN | OVP_LED_PIN | SCP_LED_PIN);
+    gpio_bit_set(LED_PORT, OCP_LED_PIN | OVP_LED_PIN | SCP_LED_PIN);   // 初始熄灭
 	
 	/* USB 引脚 */
 	gpio_init(GPIOA,GPIO_MODE_AF_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_11|GPIO_PIN_12);

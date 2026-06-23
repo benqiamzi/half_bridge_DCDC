@@ -65,6 +65,7 @@ void TIMER5_IRQHandler(void)
 		{
 			cnt = 0;
 			fsm_Proc();	
+			auto_get_ctr_mode();
 		}
 	
 	send_param_data();
@@ -247,10 +248,19 @@ void task_list(void)
 {
 	key_Proc();
 	oled_show();
-	// fsm_Proc();
-//	led_Proc();
-	// encoder_Proc();	
+	led_Proc();
 	
+}
+
+void led_spark(uint32_t led_pin)
+{
+	uint8_t state = gpio_output_bit_get(LED_PORT, led_pin);
+	gpio_bit_write(LED_PORT,led_pin, (bit_status)(!state));
+}
+
+void protect_led_reset(void)
+{
+	gpio_bit_set(LED_PORT, OCP_LED_PIN | OVP_LED_PIN | SCP_LED_PIN);   // 初始熄灭
 }
 
 uint32_t led_tick = 0;
@@ -261,7 +271,22 @@ void led_Proc(void)
 		return;
 	
 	led_tick = uwTick;
-	
+	if(protect_handle.ocp_flag == 1)
+	{
+		led_spark(OCP_LED_PIN);
+	}
+	else if(protect_handle.short_flag == 1)
+	{
+		led_spark(SCP_LED_PIN);
+	}
+	else if(protect_handle.Vout_ovp_flag == 1||protect_handle.Vin_ovp_flag == 1)
+	{
+		led_spark(OVP_LED_PIN);
+	}
+	else
+	{
+		protect_led_reset();
+	}
 
 }
 

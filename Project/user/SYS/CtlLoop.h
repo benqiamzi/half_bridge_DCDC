@@ -10,6 +10,12 @@
 #define MIN_DUTY 100
 
 
+typedef enum
+{
+	CTR_PID = 0,
+	CTR_PID_WITH_iL,
+}CTR_ALGO;
+
 typedef struct
 {
 	uint16_t Vyset_q15;	// 电压参考数字量
@@ -17,7 +23,6 @@ typedef struct
 	uint16_t Vxset_q15;	// 电压参考数字量
 	uint16_t Ixset_q15;	// 电压参考数字量
 
-	
 	float Vyset_f32;	// 电压参考有效值
 	float Iyset_f32;	// 电压参考有效值
 	float Vxset_f32;	// 电压参考有效值
@@ -41,6 +46,9 @@ typedef struct
 	float k_vy_a;
 	float k_vy_b;
 
+	float iL_min_threshold;
+	float iL_max_threshold;
+	CTR_ALGO ctr_algo; 
 }CtlValue_t;
 
 typedef struct
@@ -66,7 +74,7 @@ void loop_set_vol_y(float vol);
 void loop_set_cur_x(float cur);
 void loop_set_cur_y(float cur);
 
-void BuckOpenLoopTest(void);
+void auto_get_ctr_mode(void);
 void LoopCtl(void);
 void CtlValue_Init(void);
 

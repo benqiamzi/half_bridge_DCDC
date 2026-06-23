@@ -66,15 +66,15 @@ OF SUCH DAMAGE.
 #define ENCODER_PORT                        GPIOB
 
 #define LED_PORT                  GPIOC
-#define LED1_PIN                         GPIO_PIN_13
+#define OVP_LED_PIN                         GPIO_PIN_13
 #define LED1_GPIO_PORT                   GPIOC
 #define LED1_GPIO_CLK                    RCU_GPIOC
   
-#define LED2_PIN                         GPIO_PIN_14
+#define SCP_LED_PIN                         GPIO_PIN_14
 #define LED2_GPIO_PORT                   GPIOC
 #define LED2_GPIO_CLK                    RCU_GPIOC
   
-#define LED3_PIN                         GPIO_PIN_15
+#define OCP_LED_PIN                         GPIO_PIN_15
 #define LED3_GPIO_PORT                   GPIOC
 #define LED3_GPIO_CLK                    RCU_GPIOC
 

@@ -30,7 +30,7 @@ void cdc_receive_data(void)
 
 void send_param_data(void)
 {
-    memset()
+    // memset()
     uint8_t i = 2;
     send_data[i] = 1+12+4;
     send_data[i+1] = SEND_DATA;
@@ -85,7 +85,7 @@ void send_param_data(void)
 //  run_flag    ctr_mode    out_mode    
 void send_state_data(void)
 {
-    memset()
+    // memset()
     uint8_t i = 2;
     send_data[i] = 1+1+4;
     send_data[i+1] = SEND_STATE;

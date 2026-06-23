@@ -2,19 +2,23 @@
 #include <math.h>
 
 FloatPID pid_CV_Buck;
+FloatPID pid_CV_Buck_with_iL;
 FloatPID pid_CC_Buck;
+
 FloatPID pid_CV_Boost;
+FloatPID pid_CV_Boost_with_iL;
 FloatPID pid_CC_Boost;
 FloatPID pid_iL;
 
 void my_Pid_Init(void)
 {
 	PID_Init(&pid_CC_Buck, 10.0f, 400.0f, 0.001f, MIN_DUTY, MAX_DUTY, 0, MAX_DUTY, 0.95f);
-	PID_Init(&pid_CV_Buck, 5.0f, 50.0f, 0.001f, 0.0f, 6.0f, 0.0f, 6.0f, 0.98f);
+	PID_Init(&pid_CV_Buck, 10, 200, 0.001f, 0.0f, MAX_DUTY, 0.0f, MAX_DUTY, 0.98f);
+    PID_Init(&pid_CV_Buck_with_iL, 5.0f, 50.0f, 0.001f, 0.0f, 6.0f, 0.0f, 6.0f, 0.98f);
 
 	PID_Init(&pid_CC_Boost, 10.0f, 400.0f, 0.001f, MIN_DUTY, MAX_DUTY, 0, MAX_DUTY, 0.95f);
-	PID_Init(&pid_CV_Boost, 1, 20, 0.001f, 0.0f, 6.0f, 0.0f, 6.0f, 0.98f);
-    // PID_Init(&pid_CV_Boost, 4.0f, 50.0f, 0.001f,MIN_DUTY, MAX_DUTY,MIN_DUTY, MAX_DUTY,0.98f);
+	PID_Init(&pid_CV_Boost, 3, 40, 0.001f, 0.0f, MAX_DUTY, 0.0f, MAX_DUTY, 0.98f);
+    PID_Init(&pid_CV_Boost_with_iL, 1, 20, 0.001f, 0.0f, 6.0f, 0.0f, 6.0f, 0.98f);
     PID_Init(&pid_iL, 10, 200, 0.001f, MIN_DUTY, MAX_DUTY, 0, MAX_DUTY, 0.98f);
 }
 
@@ -24,7 +28,10 @@ void PID_Param_Reset(void)
     PID_Reset(&pid_CV_Buck);
     PID_Reset(&pid_CC_Boost);
     PID_Reset(&pid_CV_Boost);
+    PID_Reset(&pid_CV_Buck_with_iL);
+    PID_Reset(&pid_CV_Boost_with_iL);
     PID_Reset(&pid_iL);
+
 
 }
 

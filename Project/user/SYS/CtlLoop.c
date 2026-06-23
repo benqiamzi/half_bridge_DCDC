@@ -5,6 +5,7 @@
 #include "sys_bsp.h"
 #include "CtlLoop.h"
 #include "protection.h"
+#include <math.h>
 
 PWM_VALUE_t pwm_value ={
 	.Q1Duty = MIN_DUTY,
@@ -16,17 +17,17 @@ PWM_VALUE_t pwm_value ={
 #define DEADTIME 400
 
 CtlValue_t ctr_value = {
-	.k_vy_a = 1.0015f,
-	.k_vy_b = 0.0348f,
+	.k_vy_a = 1.00f,
+	.k_vy_b = 0,
 	.k_vx_a = 1.0000f,
-	.k_vx_b = 0.0266f,
-	.k_iy_a = 1.004f,
-	.k_iy_b = -0.004f,
+	.k_vx_b = 0,
+	.k_iy_a = 1.00f,
+	.k_iy_b = 0,
+	.iL_max_threshold = 0.5f,
+	.iL_min_threshold = 0.3f,
+	.ctr_algo = CTR_PID
 
 };
-
-
-
 
 
 
@@ -59,15 +60,16 @@ void CtlValue_Init(void)
 				* ctr_value.Gi;
 }
 
-void BoostOpenLoopTest(void)
+void auto_get_ctr_mode(void)
 {
+	if(ctrState.run_flag == RUN_MODE_STOP)
+	{
 
-}
-
-void BuckOpenLoopTest(void)
-{
-
-
+		if(fabs(my_adc_sample.Vy_f32-my_adc_sample.Vx_f32)<3.0f)
+			ctrState.ctr_mode = CTR_BOOST;
+		else 
+			ctrState.ctr_mode = CTR_BUCK;
+	}
 }
 
 uint16_t duty_limit(PWM_VALUE_t * pwm_value,uint16_t value, CTR_MODE mode)
@@ -194,11 +196,17 @@ void LoopCtl(void)
 	{
 		if(ctrState.out_mode == OUT_CV)
 		{
+			if(ctr_value.ctr_algo == CTR_PID)
+			{
+				vol_loop = PID_Update(&pid_CV_Buck, ctr_value.Vyset_f32, my_adc_sample.Vy_f32, 1.0f/40e3);
+				tmp = vol_loop;
+			}
+			else
+			{
+				vol_loop = PID_Update(&pid_CV_Buck_with_iL, ctr_value.Vyset_f32, my_adc_sample.Vy_f32, 1.0f/40e3);
+				tmp = PID_Update(&pid_iL, vol_loop, my_adc_sample.iL_f32, 1.0f/40e3);
+			}
 
-			vol_loop = PID_Update(&pid_CV_Buck, ctr_value.Vyset_f32, my_adc_sample.Vy_f32, 1.0f/40e3);
-
-			tmp = PID_Update(&pid_iL, vol_loop, my_adc_sample.iL_f32, 1.0f/40e3);
-			
 			pwm_value.Q1Duty = (uint16_t)tmp;
 			
 			duty_limit(&pwm_value, pwm_value.Q1Duty, CTR_BUCK);
@@ -221,11 +229,16 @@ void LoopCtl(void)
 	{
 		if(ctrState.out_mode == OUT_CV)
 		{
-			// 计算电压外环PID
-			vol_loop = PID_Update(&pid_CV_Boost, ctr_value.Vxset_f32, my_adc_sample.Vx_f32, 1.0f/40e3);
-
-			// 计算电流内环PID
-			tmp = PID_Update(&pid_iL, vol_loop,my_adc_sample.iL_f32, 1.0f/40e3);
+			if(ctr_value.ctr_algo == CTR_PID)
+			{
+				vol_loop = PID_Update(&pid_CV_Boost, ctr_value.Vxset_f32, my_adc_sample.Vx_f32, 1.0f/40e3);
+				tmp = vol_loop;
+			}
+			else
+			{
+				vol_loop = PID_Update(&pid_CV_Boost_with_iL, ctr_value.Vxset_f32, my_adc_sample.Vx_f32, 1.0f/40e3);
+				tmp = PID_Update(&pid_iL, vol_loop, my_adc_sample.iL_f32, 1.0f/40e3);
+			}
 
 			pwm_value.Q2Duty = duty_limit(&pwm_value, (uint16_t)tmp, CTR_BOOST);
 
@@ -288,6 +301,21 @@ void DMA0_Channel0_IRQHandler(void)
 			(my_adc_sample.iL_raw- ctr_value.offset):(ctr_value.offset-my_adc_sample.iL_raw);
 		my_adc_sample.iL_f32 = _iL*ctr_value.Gi_re;
 
+
+		// 环路控制算法选择
+		if(my_adc_sample.iL_f32 >= ctr_value.iL_max_threshold)
+		{
+			ctr_value.ctr_algo = CTR_PID_WITH_iL;
+		}
+		else if(my_adc_sample.iL_f32 <= ctr_value.iL_min_threshold)
+		{
+			ctr_value.ctr_algo = CTR_PID;
+		}
+		else
+		{
+			ctr_value.ctr_algo = ctr_value.ctr_algo;
+		}
+
 		// 保护函数
 		if(ctrState.ctr_mode == CTR_BUCK)
 		{
@@ -311,13 +339,6 @@ void DMA0_Channel0_IRQHandler(void)
 			/* 先清标志再执行 LoopCtl，避免耗时处理期间新 FTF 到达后连带被清 */
         	LoopCtl();
 		}
-		// static uint8_t cnt = 0;
-		// cnt++;
-		// if(cnt == 4)
-		// {
-		// 	cnt = 0;
-			
-		// }
 
         gpio_bit_reset(GPIOA,GPIO_PIN_10);
 		dma_interrupt_flag_clear(DMA0, DMA_CH0, DMA_INT_FLAG_G);
