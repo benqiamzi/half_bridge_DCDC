@@ -295,7 +295,7 @@ void timer0_pwm_config(void)
 
     timer_breakpara.runoffstate      = TIMER_ROS_STATE_DISABLE;  // 禁止运行态输出
     timer_breakpara.ideloffstate     = TIMER_IOS_STATE_DISABLE ; // 禁止空闲态输出
-    timer_breakpara.deadtime         = 50;                      // 死区时间配置：60个定时器时钟周期
+    timer_breakpara.deadtime         = 35;                      // 死区时间配置：60个定时器时钟周期
                                                                 // 60 / 60MHz = 1us 死区，防止上下管直通
     timer_breakpara.breakpolarity    = TIMER_BREAK_POLARITY_LOW; // 刹车引脚低电平有效（本工程未使用刹车）
     timer_breakpara.outputautostate  = TIMER_OUTAUTO_ENABLE;     // 自动输出使能：刹车解除后自动恢复PWM输出

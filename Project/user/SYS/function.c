@@ -12,8 +12,8 @@ uint16_t volt_cnt = 0;
 
 uint8_t param_set_idx = 0;
 const float param_set_step[] = {0.1f, 0.2f, 0.5f, 1.0f, 2.0f};
-const float vol_range_x[] = {15.0f, 27.0f};
-const float vol_range_y[] = {5.0f, 16.0f};
+const float vol_range_x[] = {12.0f, 27.0f};
+const float vol_range_y[] = {4.0f, 16.0f};
 const float cur_range_x[] = {0.0f, 2.5f};
 const float cur_range_y[] = {0.0f, 5.0f};
 
@@ -66,6 +66,8 @@ void TIMER5_IRQHandler(void)
 			cnt = 0;
 			fsm_Proc();	
 			auto_get_ctr_mode();
+			if(ctrState.run_flag == RUN_MODE_RUN)
+				get_duty_eff();
 		}
 	
 	send_param_data();
@@ -134,8 +136,8 @@ void fsm_Proc(void)
 
 CCMRAM void PWM_Rise(void)
 {
-	const static uint8_t step = 30;
-	const static uint8_t boost_step = 5;
+	const static uint8_t step = 100;
+	const static uint8_t boost_step = 50;
 	static  uint16_t	Q1Cnt=0,Q2Cnt=0;//5mS计数器，PWM软起的计时器
 
 	switch(ctrState.STState)
@@ -298,16 +300,12 @@ CCMRAM void oled_show(void)
 		return;
 	
 	oled_tick = uwTick;
-	adc_disp();
-
-	sprintf(tx_buf, "cnt = %d\n", encoder_get_count());
-	cdc_send_data(tx_buf, strlen(tx_buf));
-
+	// adc_disp();
 	switch(ctrState.ui)
 	{
 		case UI_PARAM:	
 		{
-			OLED_Printf(0,Line0, OLED_8X16, "Vx:%0.3fV ", my_adc_sample.Vx_f32);
+			OLED_Printf(0,Line0, OLED_8X16, "Vx:%0.2fV ", my_adc_sample.Vx_f32);
 			if(ctrState.run_flag == RUN_MODE_RUN)
 			{
 				OLED_ShowString(10*8,Line0," RUN ",OLED_8X16);
@@ -317,8 +315,10 @@ CCMRAM void oled_show(void)
 				OLED_ShowString(10*8,Line0," STOP ",OLED_8X16);
 			}
 
-			OLED_Printf(0,Line1, OLED_8X16, "Ix:%0.3fA  %d  ", my_adc_sample.Ix_f32, \
-				ctrState.ctr_mode == CTR_BUCK ? pwm_value.Q1Duty : pwm_value.Q2Duty);
+			OLED_Printf(0,Line1, OLED_8X16, "Ix:%0.2fA  %d  ", my_adc_sample.Ix_f32, \
+				// ctr_value.ctr_algo == CTR_PID? 0:1);
+				(ctrState.ctr_mode == CTR_BUCK)? pwm_value.Q1Duty:pwm_value.Q2Duty);
+
 			if(ctrState.ctr_mode == CTR_BUCK)
 			{
 				OLED_ShowString(11*8,Line2,"BUCK ",OLED_8X16);
@@ -341,8 +341,8 @@ CCMRAM void oled_show(void)
 				OLED_ShowString(10*8,Line3," CC ",OLED_8X16);
 			}
 			
-			OLED_Printf(0,Line2, OLED_8X16, "Vy:%0.3fV ", my_adc_sample.Vy_f32);
-			OLED_Printf(0,Line3, OLED_8X16, "Iy:%0.3fA ", my_adc_sample.Iy_f32);
+			OLED_Printf(0,Line2, OLED_8X16, "Vy:%0.2fV ", my_adc_sample.Vy_f32);
+			OLED_Printf(0,Line3, OLED_8X16, "Iy:%0.2fA ", my_adc_sample.Iy_f32);
 			break;
 		}
 		case UI_SET:
@@ -351,8 +351,8 @@ CCMRAM void oled_show(void)
 			if(ctrState.ctr_mode == CTR_BUCK)
 			{
 				OLED_Printf(0,Line0, OLED_8X16, "Buck ");
-				OLED_Printf(0,Line1, OLED_8X16, "Vy:%0.3fV    ", my_adc_sample.Vy_f32);
-				OLED_Printf(0,Line2, OLED_8X16, "Iy:%0.3fA   ", my_adc_sample.Iy_f32);
+				OLED_Printf(0,Line1, OLED_8X16, "Vy:%0.2fV    ", my_adc_sample.Vy_f32);
+				OLED_Printf(0,Line2, OLED_8X16, "Iy:%0.2fA   ", my_adc_sample.Iy_f32);
 				if(ctrState.out_mode == OUT_CV)
 				{
 					OLED_ShowString(out_mode_num*8,Line0," CV ",OLED_8X16);
@@ -367,8 +367,8 @@ CCMRAM void oled_show(void)
 			else if(ctrState.ctr_mode == CTR_BOOST)
 			{
 				OLED_Printf(0,Line0, OLED_8X16, "Boost ");
-				OLED_Printf(0,Line1, OLED_8X16, "Vx:%0.3fV    ", my_adc_sample.Vx_f32);
-				OLED_Printf(0,Line2, OLED_8X16, "Ix:%0.3fA   ", my_adc_sample.Ix_f32);
+				OLED_Printf(0,Line1, OLED_8X16, "Vx:%0.2fV    ", my_adc_sample.Vx_f32);
+				OLED_Printf(0,Line2, OLED_8X16, "Ix:%0.2fA   ", my_adc_sample.Ix_f32);
 				if(ctrState.out_mode == OUT_CV)
 				{
 					OLED_ShowString(out_mode_num*8,Line0," CV ",OLED_8X16);

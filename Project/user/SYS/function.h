@@ -26,7 +26,6 @@ typedef enum
 {
 	CTR_BUCK = 0,
 	CTR_BOOST,
-	CTR_OPEN_LOOP
 }CTR_MODE;
 
 typedef enum

@@ -18,14 +18,15 @@ PWM_VALUE_t pwm_value ={
 
 CtlValue_t ctr_value = {
 	.k_vy_a = 1.00f,
-	.k_vy_b = 0,
+	.k_vy_b = 0.0f,
 	.k_vx_a = 1.0000f,
 	.k_vx_b = 0,
 	.k_iy_a = 1.00f,
 	.k_iy_b = 0,
-	.iL_max_threshold = 0.5f,
-	.iL_min_threshold = 0.3f,
-	.ctr_algo = CTR_PID
+	.iL_max_threshold = 0.2f,
+	.iL_min_threshold = 0.05f,
+	.ctr_algo = CTR_PID_WITH_iL
+
 
 };
 
@@ -36,7 +37,7 @@ void CtlValue_Init(void)
 	ctr_value.Vyset_f32 = 12.0f;
 	ctr_value.Iyset_f32 = 0.5f;
 
-	ctr_value.Vxset_f32 = 24.0f;
+	ctr_value.Vxset_f32 = 22.0f;
 	ctr_value.Ixset_f32 = 0.5f;
 	
 	ctr_value.Ri_sample = 10;
@@ -100,6 +101,35 @@ uint16_t duty_limit(PWM_VALUE_t * pwm_value,uint16_t value, CTR_MODE mode)
 	}
 
 	return value;
+}
+
+void get_duty_eff(void)
+{
+	if(ctrState.ctr_mode == CTR_BUCK)
+	{
+		// Buck 前馈：高边占空比 = Vout/Vin × 周期
+		// 防止启动时 Vx=0 导致除零异常
+		if(my_adc_sample.Vx_f32 > 0.5f)
+			ctr_value.duty_eff = my_adc_sample.Vy_f32 / my_adc_sample.Vx_f32 * PERIOD;
+		else
+			ctr_value.duty_eff = 0.0f;
+
+		if(ctr_value.duty_eff > MAX_DUTY)
+			ctr_value.duty_eff = MAX_DUTY;
+	}
+	else
+	{
+		// Boost 前馈：低边占空比 = (Vout - Vin) / Vout × 周期
+		if(my_adc_sample.Vx_f32 > 0.5f)
+			ctr_value.duty_eff = (my_adc_sample.Vy_f32 - my_adc_sample.Vx_f32) / my_adc_sample.Vy_f32 * PERIOD;
+		else
+			ctr_value.duty_eff = 0.0f;
+
+		if(ctr_value.duty_eff < 0.0f)
+			ctr_value.duty_eff = 0.0f;
+		if(ctr_value.duty_eff > BOOST_MAX_DUTY)
+			ctr_value.duty_eff = BOOST_MAX_DUTY;
+	}
 }
 
 void duty_change(uint16_t duty,uint8_t ch)
@@ -189,37 +219,30 @@ void loop_set_cur_y(float cur)
 
 void LoopCtl(void)
 {
-	float tmp = 0, vol_loop = 0;
-	
+	float tmp = 0, vol_loop = 0, vol_loop_l;
+
 	//降压电流环:
 	if(ctrState.ctr_mode == CTR_BUCK)
 	{
 		if(ctrState.out_mode == OUT_CV)
 		{
-			if(ctr_value.ctr_algo == CTR_PID)
-			{
-				vol_loop = PID_Update(&pid_CV_Buck, ctr_value.Vyset_f32, my_adc_sample.Vy_f32, 1.0f/40e3);
-				tmp = vol_loop;
-			}
-			else
-			{
-				vol_loop = PID_Update(&pid_CV_Buck_with_iL, ctr_value.Vyset_f32, my_adc_sample.Vy_f32, 1.0f/40e3);
-				tmp = PID_Update(&pid_iL, vol_loop, my_adc_sample.iL_f32, 1.0f/40e3);
-			}
-
+			float set_point = ctr_value.Vyset_f32*ctr_value.k_vy_a+ctr_value.k_vy_b;
+			vol_loop = PID_Update(&pid_CV_Buck_With_iL, set_point, my_adc_sample.Vy_f32, 1.0f/40e3);
+			tmp = PID_Update(&pid_Buck_iL, vol_loop, my_adc_sample.iL_f32, 1.0f/40e3);
+			
 			pwm_value.Q1Duty = (uint16_t)tmp;
-			
-			duty_limit(&pwm_value, pwm_value.Q1Duty, CTR_BUCK);
-			
+			pwm_value.Q1Duty = duty_limit(&pwm_value, pwm_value.Q1Duty, CTR_BUCK);
+
 			duty_change(pwm_value.Q1Duty,TIMER_CH_0);
 		}
 		else if(ctrState.out_mode == OUT_CC)
 		{
 
-			tmp = PID_Update(&pid_CC_Buck, ctr_value.Iyset_f32, my_adc_sample.Iy_f32, 1.0f/40e3);
+			float cur_loop = PID_Update(&pid_CC_Buck, ctr_value.Iyset_f32, my_adc_sample.Iy_f32, 1.0f/40e3);
+			tmp = PID_Update(&pid_Buck_iL, cur_loop, my_adc_sample.iL_f32, 1.0f/40e3);
 			pwm_value.Q1Duty = (uint16_t)tmp;
 				
-			duty_limit(&pwm_value, pwm_value.Q1Duty, CTR_BUCK);
+			pwm_value.Q1Duty = duty_limit(&pwm_value, pwm_value.Q1Duty, CTR_BUCK);
 			
 			duty_change(pwm_value.Q1Duty,TIMER_CH_0);
 			//duty_change(1500,TIMER_CH_0);
@@ -229,21 +252,13 @@ void LoopCtl(void)
 	{
 		if(ctrState.out_mode == OUT_CV)
 		{
-			if(ctr_value.ctr_algo == CTR_PID)
-			{
-				vol_loop = PID_Update(&pid_CV_Boost, ctr_value.Vxset_f32, my_adc_sample.Vx_f32, 1.0f/40e3);
-				tmp = vol_loop;
-			}
-			else
-			{
-				vol_loop = PID_Update(&pid_CV_Boost_with_iL, ctr_value.Vxset_f32, my_adc_sample.Vx_f32, 1.0f/40e3);
-				tmp = PID_Update(&pid_iL, vol_loop, my_adc_sample.iL_f32, 1.0f/40e3);
-			}
+			vol_loop = PID_Update(&pid_CV_Boost, ctr_value.Vxset_f32, my_adc_sample.Vx_f32, 1.0f/40e3);
+			tmp = PID_Update(&pid_Boost_iL, vol_loop, my_adc_sample.iL_f32, 1.0f/40e3);
 
 			pwm_value.Q2Duty = duty_limit(&pwm_value, (uint16_t)tmp, CTR_BOOST);
 
-			pwm_value.Q2Duty = BOOST_MAX_DUTY - pwm_value.Q2Duty;
-			
+			pwm_value.Q2Duty = BOOST_MAX_DUTY - (pwm_value.Q2Duty+ctr_value.duty_eff);
+
 			duty_change(pwm_value.Q2Duty,TIMER_CH_0);
 			// duty_change(1500,TIMER_CH_0);
 		}
@@ -282,9 +297,6 @@ void DMA0_Channel0_IRQHandler(void)
 		my_adc_sample.Vx_raw = adc_value[4];
 
 			/* ---- 浮点换算（保护函数全部使用 float 进行比较） ---- */
-		my_adc_sample.Vy_f32 = (float)my_adc_sample.Vy_raw * ctr_value.Gv_re;
-		my_adc_sample.Vx_f32 = (float)my_adc_sample.Vx_raw * ctr_value.Gv_re;
-
 		float _iy = ((my_adc_sample.Iy_raw > ctr_value.offset) ?
 		              (float)(my_adc_sample.Iy_raw - ctr_value.offset) :
 		              (float)(ctr_value.offset - my_adc_sample.Iy_raw));
@@ -295,26 +307,33 @@ void DMA0_Channel0_IRQHandler(void)
 		              (float)(ctr_value.offset - my_adc_sample.Ix_raw));
 		my_adc_sample.Ix_f32 = _ix * ctr_value.Gi_re;
 
+		if(my_adc_sample.Vx_f32<0.00001f)
+		{
+			my_adc_sample.Vx_f32 = 0.0f;
+		}
+		if(my_adc_sample.Vy_f32<0.00001f)
+		{
+			my_adc_sample.Vy_f32 = 0.0f;
+		}
 
 		// 计算电感电流
 		float _iL = ((my_adc_sample.iL_raw- ctr_value.offset)>0)?\
 			(my_adc_sample.iL_raw- ctr_value.offset):(ctr_value.offset-my_adc_sample.iL_raw);
 		my_adc_sample.iL_f32 = _iL*ctr_value.Gi_re;
 
+		my_adc_sample.Vy_f32 = (float)my_adc_sample.Vy_raw * ctr_value.Gv_re - 0.01f*my_adc_sample.Iy_f32-0.01f*my_adc_sample.iL_f32;
+		my_adc_sample.Vy_f32 = my_adc_sample.Vy_f32*ctr_value.k_vy_a+ctr_value.k_vy_b;
+		my_adc_sample.Vx_f32 = (float)my_adc_sample.Vx_raw * ctr_value.Gv_re - 0.01f*my_adc_sample.Ix_f32;
 
 		// 环路控制算法选择
-		if(my_adc_sample.iL_f32 >= ctr_value.iL_max_threshold)
-		{
-			ctr_value.ctr_algo = CTR_PID_WITH_iL;
-		}
-		else if(my_adc_sample.iL_f32 <= ctr_value.iL_min_threshold)
-		{
-			ctr_value.ctr_algo = CTR_PID;
-		}
-		else
-		{
-			ctr_value.ctr_algo = ctr_value.ctr_algo;
-		}
+		// if(my_adc_sample.iL_f32 >= ctr_value.iL_max_threshold)
+		// {
+		// 	ctr_value.ctr_algo = CTR_PID_WITH_iL;
+		// }
+		// else if(my_adc_sample.iL_f32 <= ctr_value.iL_min_threshold)
+		// {
+		// 	ctr_value.ctr_algo = CTR_PID;
+		// }
 
 		// 保护函数
 		if(ctrState.ctr_mode == CTR_BUCK)

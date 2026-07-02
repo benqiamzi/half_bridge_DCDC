@@ -14,6 +14,7 @@ typedef enum
 {
 	CTR_PID = 0,
 	CTR_PID_WITH_iL,
+	CTR_OPEN_LOOP,
 }CTR_ALGO;
 
 typedef struct
@@ -36,6 +37,9 @@ typedef struct
 	
 	float Gv_re;	// 1/电压环增益
 	float Gi_re;	 // 1/电流环增益
+
+	float duty_eff;
+	uint16_t close_cnt;
 	
 	float k_iy_a;
 	float k_iy_b;
@@ -75,6 +79,7 @@ void loop_set_cur_x(float cur);
 void loop_set_cur_y(float cur);
 
 void auto_get_ctr_mode(void);
+void get_duty_eff(void);
 void LoopCtl(void);
 void CtlValue_Init(void);
 

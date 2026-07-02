@@ -32,7 +32,7 @@ extern protection_handle_t protect_handle;
  *===========================================================================*/
 
 /* ---- Buck 模式 ---- */
-#define BUCK_VOUT_OVP_THRESHOLD     15.0f     // 输出过压 (V)
+#define BUCK_VOUT_OVP_THRESHOLD     16.0f     // 输出过压 (V)
 #define BUCK_VOUT_OCP_THRESHOLD     5.1f      // 输出过流 (A)
 #define BUCK_VIN_OVP_THRESHOLD      26.0f     // 输入过压 (V)
 #define BUCK_VIN_UVP_THRESHOLD      18.0f     // 输入欠压 (V)

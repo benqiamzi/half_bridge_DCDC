@@ -3,10 +3,10 @@
 
 ADC_SAMPLE_t my_adc_sample = 
 {
-	.k_iy_a = 1.0028f,
-	.k_iy_b = +0.0028f,
-	.k_vy_a = 0.9995f,
-	.k_vy_b = -0.0475f,
+	.k_iy_a = 1.00f,
+	.k_iy_b = 0.00f,
+	.k_vy_a =1.00f,
+	.k_vy_b = 0.0f,
 
 };
 
@@ -103,7 +103,7 @@ CCMRAM void adc_filter(void)
 void adc_disp(void)
 {
 	q15_t tmp = 0;
-	//adc_filter();
+	// adc_filter();
 
 	//计算Ix电流
 	tmp = ((my_adc_sample.Ix_q15- ctr_value.offset)>0)?\
