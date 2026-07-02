@@ -14,17 +14,16 @@ FloatPID pid_Buck_iL;
 void my_Pid_Init(void)
 {
 	PID_Init(&pid_CV_Buck_With_iL, 3, 20, 0.0002, 0, 6, 0, 10, 0.98f);
-    PID_Init(&pid_CV_Buck, 10, 50, 0.0002, 0, MAX_DUTY-200, 0, MAX_DUTY, 0.98f);
-
     PID_Init(&pid_CC_Buck, 10, 50, 0.002, 0, 6.0, 0, 6.0, 0.95f);
     PID_Init(&pid_Buck_iL, 20, 100, 0.0002, 0, MAX_DUTY-200, MIN_DUTY, MAX_DUTY, 0.98f);
 
 
-   
     PID_Init(&pid_CC_Boost, 3, 25, 0.002, MIN_DUTY, MAX_DUTY, 0, MAX_DUTY, 0.95f);
-
-    PID_Init(&pid_CV_Boost, 2, 10, 0.0002, 0, 6, 0, 10, 0.99f);
-    PID_Init(&pid_Boost_iL, 10, 70, 0.0002, 0, MAX_DUTY, 0, MAX_DUTY, 0.99f);
+    PID_Init(&pid_CV_Boost, 8, 40, 0.0002, 0, 6, 0, 10, 0.99f);
+    PID_Init(&pid_Boost_iL, 20, 100, 0.0002, 0, MAX_DUTY, 0, MAX_DUTY, 0.99f);
+    
+    // 没有用到的参数
+    PID_Init(&pid_CV_Buck, 10, 50, 0.0002, 0, MAX_DUTY-200, 0, MAX_DUTY, 0.98f);
 }
 
 void PID_Param_Reset(void)
